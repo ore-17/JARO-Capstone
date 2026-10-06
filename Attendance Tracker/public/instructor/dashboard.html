@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Instructor Dashboard</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>Attendace Tracker</h1>
+
+    <nav>
+
+        <a href="/instructor/dashboard.html">
+            Dashboard
+        </a>
+
+        <a href="#">
+            My Courses
+        </a>
+
+        <a href="#">
+            Students
+        </a>
+
+        <a href="#">
+            Attendance
+        </a>
+
+        <a href="#">
+            Reports
+        </a>
+
+        <button onclick="logout()">
+            Logout
+        </button>
+
+    </nav>
+
+</header>
+
+<main>
+
+    <h2>Instructor Dashboard</h2>
+
+    <p id="welcomeMessage">
+        Welcome!
+    </p>
+
+    <div class="cards">
+
+        <div class="card">
+
+            <h3>My Courses</h3>
+
+            <p>3</p>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Total Students</h3>
+
+            <p>85</p>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Today's Classes</h3>
+
+            <p>2</p>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Attendance Taken</h3>
+
+            <p>1</p>
+
+        </div>
+
+    </div>
+
+    <section class="content-box">
+
+        <h2>Today's Classes</h2>
+
+        <table>
+
+            <tr>
+
+                <th>Course</th>
+                <th>Time</th>
+                <th>Action</th>
+
+            </tr>
+
+            <tr>
+
+                <td>CSCE 3444</td>
+
+                <td>10:00 AM</td>
+
+                <td>
+                    <button>
+                        Take Attendance
+                    </button>
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <td>CSCE 3110</td>
+
+                <td>2:00 PM</td>
+
+                <td>
+                    <button>
+                        Take Attendance
+                    </button>
+                </td>
+
+            </tr>
+
+        </table>
+
+    </section>
+
+</main>
+
+<script>
+
+    const user =
+        JSON.parse(localStorage.getItem("user"));
+
+    if (user) {
+
+        document.getElementById(
+            "welcomeMessage"
+        ).textContent =
+            `Welcome, ${user.name}!`;
+
+    }
+
+    function logout() {
+
+        localStorage.removeItem("user");
+
+        window.location.href = "/";
+
+    }
+
+</script>
+
+</body>
+
+</html>

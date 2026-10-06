@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Student Dashboard</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>Attendace Tracker</h1>
+
+    <nav>
+
+        <a href="/student/dashboard.html">
+            Dashboard
+        </a>
+
+        <a href="#">
+            My Courses
+        </a>
+
+        <a href="#">
+            Attendance
+        </a>
+
+        <a href="#">
+            Reports
+        </a>
+
+        <a href="#">
+            Profile
+        </a>
+
+        <button onclick="logout()">
+            Logout
+        </button>
+
+    </nav>
+
+</header>
+
+<main>
+
+    <h2>Student Dashboard</h2>
+
+    <p id="welcomeMessage">
+        Welcome!
+    </p>
+
+    <div class="cards">
+
+        <div class="card">
+
+            <h3>My Courses</h3>
+
+            <p>4</p>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Attendance Rate</h3>
+
+            <p>92%</p>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Present</h3>
+
+            <p>23</p>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Absent</h3>
+
+            <p>2</p>
+
+        </div>
+
+    </div>
+
+    <section class="content-box">
+
+        <h2>Recent Attendance</h2>
+
+        <table>
+
+            <tr>
+
+                <th>Course</th>
+                <th>Date</th>
+                <th>Status</th>
+
+            </tr>
+
+            <tr>
+
+                <td>CSCE 3444</td>
+                <td>October 5</td>
+                <td class="present">
+                    Present
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <td>CSCE 3110</td>
+                <td>October 3</td>
+                <td class="present">
+                    Present
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <td>MATH 2730</td>
+                <td>October 1</td>
+                <td class="absent">
+                    Absent
+                </td>
+
+            </tr>
+
+        </table>
+
+    </section>
+
+</main>
+
+<script>
+
+    const user =
+        JSON.parse(localStorage.getItem("user"));
+
+    if (user) {
+
+        document.getElementById(
+            "welcomeMessage"
+        ).textContent =
+            `Welcome, ${user.name}!`;
+
+    }
+
+    function logout() {
+
+        localStorage.removeItem("user");
+
+        window.location.href = "/";
+
+    }
+
+</script>
+
+</body>
+
+</html>
