@@ -4,7 +4,8 @@
     "description": "Course Attendance System",
     "main": "api/index.js",
     "scripts": {
-        "start": "node api/index.js"
+        "start": "node api/index.js",
+        "dev": "node api/index.js"
     },
     "dependencies": {
         "express": "^5.0.0"

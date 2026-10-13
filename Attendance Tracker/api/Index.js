@@ -69,3 +69,12 @@ app.post("/api/login", (req, res) => {
 });
 
 module.exports = app;
+
+// Start the server locally
+if (require.main === module) {
+    const PORT = process.env.PORT || 3000;
+
+    app.listen(PORT, () => {
+        console.log(`Attendance Tracker running at http://localhost:${PORT}`);
+    });
+}
