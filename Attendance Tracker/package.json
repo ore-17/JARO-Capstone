@@ -1,16 +1,19 @@
+
 {
-    "name": "attendance-tracker",
-    "version": "1.0.0",
-    "description": "Course Attendance System",
-    "main": "api/index.js",
-    "scripts": {
-        "start": "node api/index.js",
-        "dev": "node api/index.js"
-    },
-    "dependencies": {
-        "express": "^5.0.0"
-    },
-    "devDependencies": {
-        "vercel": "^62.4.0"
-    }
+  "name": "attendance-tracker",
+  "version": "1.0.0",
+  "description": "Course Attendance System",
+  "main": "api/index.js",
+  "private": true,
+  "scripts": {
+    "dev": "node api/index.js",
+    "start": "node api/index.js"
+  },
+  "dependencies": {
+    "express": "^5.0.0"
+  },
+  "devDependencies": {
+    "vercel": "^62.4.0"
+  }
 }
+
