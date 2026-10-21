@@ -1,3 +1,4 @@
+
 const express = require("express");
 const path = require("path");
 
@@ -5,76 +6,60 @@ const app = express();
 
 app.use(express.json());
 
-// Serve the frontend files
+// Serve frontend files
 app.use(express.static(path.join(__dirname, "../public")));
+
+// Import API handlers
+const coursesHandler = require("./courses");
+const attendanceHandler = require("./attendance");
 
 // Home page
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "../public/login.html"));
+  res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
-// Test API
+// API test route
 app.get("/api/test", (req, res) => {
-    res.json({
-        success: true,
-        message: "Course Attendance API is working!"
-    });
+  res.status(200).json({
+    success: true,
+    message: "Course Attendance API is working!"
+  });
 });
 
-// Temporary user data
-const users = [
-    {
-        id: 1,
-        name: "Raymond Bassina",
-        email: "student@test.com",
-        password: "1234",
-        role: "student"
-    },
-    {
-        id: 2,
-        name: "Professor Smith",
-        email: "instructor@test.com",
-        password: "1234",
-        role: "instructor"
-    }
-];
-
-// Temporary login API
-app.post("/api/login", (req, res) => {
-
-    const { email, password } = req.body;
-
-    const user = users.find(
-        user =>
-            user.email === email &&
-            user.password === password
-    );
-
-    if (!user) {
-        return res.status(401).json({
-            success: false,
-            message: "Invalid email or password."
-        });
-    }
-
-    res.json({
-        success: true,
-        user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role
-        }
-    });
+// Courses API
+app.all("/api/courses", (req, res) => {
+  return coursesHandler(req, res);
 });
+
+// Attendance API
+app.all("/api/attendance", (req, res) => {
+  return attendanceHandler(req, res);
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.method} ${req.originalUrl}`
+  });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({
+    success: false,
+    message: "Internal server error."
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Attendance Tracker running at http://localhost:${PORT}`);
+  });
+}
 
 module.exports = app;
 
-// Start the server locally
-if (require.main === module) {
-    const PORT = process.env.PORT || 3000;
-
-    app.listen(PORT, () => {
-        console.log(`Attendance Tracker running at http://localhost:${PORT}`);
-    });
-}

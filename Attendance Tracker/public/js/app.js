@@ -71,3 +71,40 @@ if (loginForm) {
     });
 
 }
+
+/**
+ * Fetch courses from the backend API.
+ *
+ * Examples:
+ * loadCourses({ studentId: "student-1001" });
+ * loadCourses({ instructorId: "instructor-1001" });
+ */
+async function loadCourses(filters = {}) {
+    const params = new URLSearchParams();
+
+    if (filters.courseId) {
+        params.set("courseId", filters.courseId);
+    }
+
+    if (filters.studentId) {
+        params.set("studentId", filters.studentId);
+    }
+
+    if (filters.instructorId) {
+        params.set("instructorId", filters.instructorId);
+    }
+
+    const query = params.toString();
+    const url = query
+        ? `/api/courses?${query}`
+        : "/api/courses";
+
+    const response = await fetch(url);
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+        throw new Error(result.message || "Could not load courses.");
+    }
+
+    return result.data;
+}
