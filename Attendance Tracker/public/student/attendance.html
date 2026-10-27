@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>My Attendance - Attendance Tracker</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+<header>
+    <h1>Attendance Tracker</h1>
+
+    <nav>
+        <a href="/student/dashboard.html">Dashboard</a>
+        <a href="/student/dashboard.html#myCourses">My Courses</a>
+        <a href="/student/attendance.html">Attendance</a>
+        <a href="#">Reports</a>
+        <a href="#">Profile</a>
+
+        <button onclick="logout()">Logout</button>
+    </nav>
+</header>
+
+<main>
+    <h2>My Attendance</h2>
+
+    <p id="studentName">Loading student...</p>
+
+    <div class="cards">
+
+        <div class="card">
+            <h3>Attendance Rate</h3>
+            <p id="attendanceRate">--</p>
+        </div>
+
+        <div class="card">
+            <h3>Present</h3>
+            <p id="presentCount">--</p>
+        </div>
+
+        <div class="card">
+            <h3>Absent</h3>
+            <p id="absentCount">--</p>
+        </div>
+
+        <div class="card">
+            <h3>Late</h3>
+            <p id="lateCount">--</p>
+        </div>
+
+    </div>
+
+    <section class="content-box">
+
+        <h2>Attendance History</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Course</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody id="attendanceTableBody">
+                <tr>
+                    <td colspan="3">
+                        Loading attendance...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+    </section>
+</main>
+
+<script>
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!user || user.role !== "student" || !user.id) {
+        window.location.replace("/");
+    } else {
+        document.getElementById("studentName").textContent =
+            `Attendance records for ${user.name}`;
+
+        loadAttendance();
+    }
+
+    async function loadAttendance() {
+        try {
+            const response = await fetch(
+                `/api/attendance?studentId=${encodeURIComponent(user.id)}`
+            );
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(
+                    result.message || "Failed to load attendance."
+                );
+            }
+
+            if (!Array.isArray(result.data)) {
+                throw new Error("Invalid attendance data.");
+            }
+
+            const records = result.data;
+
+            const present = records.filter(
+                record => record.status === "present"
+            ).length;
+
+            const absent = records.filter(
+                record => record.status === "absent"
+            ).length;
+
+            const late = records.filter(
+                record => record.status === "late"
+            ).length;
+
+            const excused = records.filter(
+                record => record.status === "excused"
+            ).length;
+
+            // Example policy: late counts as attended,
+            // excused is excluded from the denominator.
+            const countedSessions =
+                present + absent + late;
+
+            const rate = countedSessions > 0
+                ? Math.round(
+                    ((present + late) / countedSessions) * 100
+                  )
+                : null;
+
+            document.getElementById("presentCount").textContent =
+                present;
+
+            document.getElementById("absentCount").textContent =
+                absent;
+
+            document.getElementById("lateCount").textContent =
+                late;
+
+            document.getElementById("attendanceRate").textContent =
+                rate === null ? "N/A" : `${rate}%`;
+
+            const tableBody =
+                document.getElementById("attendanceTableBody");
+
+            tableBody.replaceChildren();
+
+            if (records.length === 0) {
+                const row = document.createElement("tr");
+                const cell = document.createElement("td");
+
+                cell.colSpan = 3;
+                cell.textContent = "No attendance records found.";
+
+                row.appendChild(cell);
+                tableBody.appendChild(row);
+                return;
+            }
+
+            records.sort((a, b) =>
+                (b.sessionDate || "").localeCompare(
+                    a.sessionDate || ""
+                )
+            );
+
+            records.forEach(record => {
+                const row = document.createElement("tr");
+
+                const courseCell = document.createElement("td");
+                courseCell.textContent = record.courseName;
+
+                const dateCell = document.createElement("td");
+                dateCell.textContent = record.sessionDate || "N/A";
+
+                const statusCell = document.createElement("td");
+                statusCell.textContent = record.status;
+
+                statusCell.className = record.status;
+
+                row.append(
+                    courseCell,
+                    dateCell,
+                    statusCell
+                );
+
+                tableBody.appendChild(row);
+            });
+
+        } catch (error) {
+            console.error("Attendance error:", error);
+
+            document.getElementById("attendanceRate").textContent =
+                "N/A";
+
+            document.getElementById("attendanceTableBody").innerHTML =
+                '<tr><td colspan="3">Unable to load attendance.</td></tr>';
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem("user");
+        window.location.href = "/";
+    }
+</script>
+
+</body>
+</html>
