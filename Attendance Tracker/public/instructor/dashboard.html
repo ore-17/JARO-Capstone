@@ -1,167 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>Instructor Dashboard</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instructor Dashboard | Course Attendance System</title>
     <link rel="stylesheet" href="/css/style.css">
 
+    <style>
+        .dashboard-container {
+            max-width: 1300px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+
+        .dashboard-header {
+            margin-bottom: 30px;
+        }
+
+        .dashboard-header h1 {
+            margin-bottom: 10px;
+        }
+
+        .dashboard-header p {
+            margin: 8px 0;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 24px;
+            margin: 30px 0;
+        }
+
+        .dashboard-card,
+        .content-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .dashboard-card {
+            text-align: center;
+        }
+
+        .dashboard-card h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .dashboard-number {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .content-section {
+            margin-bottom: 24px;
+        }
+
+        .content-section h2 {
+            margin-top: 0;
+        }
+
+        .course-select {
+            width: 100%;
+            max-width: 650px;
+            padding: 12px;
+            margin: 10px 0 20px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            background: white;
+        }
+
+        .course-details {
+            line-height: 1.8;
+        }
+
+        .status-message {
+            margin: 15px 0;
+        }
+
+        .logout-button {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 6px;
+            background: white;
+            color: #222;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .logout-button:hover {
+            background: #e8e8e8;
+        }
+
+        .dashboard-nav {
+            background: #14532d;
+            color: white;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .dashboard-nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 17px;
+        }
+
+        .dashboard-nav a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 800px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-nav {
+                gap: 16px;
+            }
+        }
+    </style>
 </head>
 
 <body>
-
-<header>
-
-    <h1>Attendance Tracker</h1>
-
-    <nav>
-
+    <!-- Navigation -->
+    <nav class="dashboard-nav">
         <a href="/instructor/dashboard.html">Dashboard</a>
-
         <a href="/instructor/courses.html">My Courses</a>
-        
-        <a href="#">
-            Students
-        </a>
+        <a href="#course-details">Course Details</a>
 
-        <a href="#">
-            Attendance
-        </a>
-
-        <a href="#">
-            Reports
-        </a>
-
-        <button onclick="logout()">
+        <button
+            type="button"
+            class="logout-button"
+            id="logoutButton">
             Logout
         </button>
-
     </nav>
 
-</header>
+    <main class="dashboard-container" id="dashboard">
+        <!-- Welcome section -->
+        <header class="dashboard-header">
+            <h1>Instructor Dashboard</h1>
 
-<main>
+            <p id="currentDate"></p>
 
-    <h2>Instructor Dashboard</h2>
+            <p id="welcomeMessage">
+                Welcome, Instructor!
+            </p>
 
-    <p id="welcomeMessage">
-        Welcome!
-    </p>
+            <p
+                id="pageMessage"
+                class="status-message"
+                role="status"
+                aria-live="polite">
+                Loading dashboard...
+            </p>
+        </header>
 
-    <div class="cards">
+        <!-- Summary cards -->
+        <section class="dashboard-grid" aria-label="Dashboard summary">
+            <div class="dashboard-card">
+                <h2>My Courses</h2>
+                <p class="dashboard-number" id="courseCount">--</p>
+            </div>
 
-        <div class="card">
+            <div class="dashboard-card">
+                <h2>Instructor</h2>
+                <p id="instructorName">--</p>
+            </div>
 
-            <h3>My Courses</h3>
+            <div class="dashboard-card">
+                <h2>Academic Term</h2>
+                <p id="academicTerm">--</p>
+            </div>
+        </section>
 
-            <p>3</p>
+        <!-- Courses section -->
+        <section class="content-section" id="my-courses">
+            <h2>My Courses</h2>
 
-        </div>
+            <p>
+                Select a course assigned to you to view its information.
+            </p>
 
-        <div class="card">
+            <label for="courseSelect">
+                <strong>Select a course</strong>
+            </label>
 
-            <h3>Total Students</h3>
+            <select
+                id="courseSelect"
+                class="course-select">
+                <option value="">Loading courses...</option>
+            </select>
+        </section>
 
-            <p>85</p>
+        <!-- Selected course details -->
+        <section class="content-section" id="course-details">
+            <h2>Selected Course</h2>
 
-        </div>
+            <p id="selectedCourseName">None</p>
 
-        <div class="card">
+            <div id="courseDetails" class="course-details">
+                Choose a course to view its details.
+            </div>
+        </section>
 
-            <h3>Today's Classes</h3>
+        <!-- Future functionality -->
+        <section class="content-section">
+            <h2>Attendance Management</h2>
 
-            <p>2</p>
+            <p>
+                Attendance management will be available in a future
+                development stage.
+            </p>
+        </section>
+    </main>
 
-        </div>
+    <!-- Login and dashboard setup -->
+    <script>
+        const instructorPageUser = JSON.parse(
+            localStorage.getItem("user")
+        );
 
-        <div class="card">
+        // Verify the logged-in user's role.
+        if (
+            !instructorPageUser ||
+            instructorPageUser.role !== "instructor"
+        ) {
+            window.location.replace("/");
+        } else {
+            document.getElementById("welcomeMessage").textContent =
+                `Welcome, ${instructorPageUser.name}!`;
 
-            <h3>Attendance Taken</h3>
+            document.getElementById("instructorName").textContent =
+                instructorPageUser.name;
+        }
 
-            <p>1</p>
+        // Display today's date.
+        document.getElementById("currentDate").textContent =
+            new Date().toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            });
 
-        </div>
+        // Log out and return to the login page.
+        document.getElementById("logoutButton").addEventListener(
+            "click",
+            function () {
+                localStorage.removeItem("user");
+                window.location.href = "/";
+            }
+        );
+    </script>
 
-    </div>
-
-    <section class="content-box">
-
-        <h2>Today's Classes</h2>
-
-        <table>
-
-            <tr>
-
-                <th>Course</th>
-                <th>Time</th>
-                <th>Action</th>
-
-            </tr>
-
-            <tr>
-
-                <td>CSCE 3444</td>
-
-                <td>10:00 AM</td>
-
-                <td>
-                    <button>
-                        Take Attendance
-                    </button>
-                </td>
-
-            </tr>
-
-            <tr>
-
-                <td>CSCE 3110</td>
-
-                <td>2:00 PM</td>
-
-                <td>
-                    <button>
-                        Take Attendance
-                    </button>
-                </td>
-
-            </tr>
-
-        </table>
-
-    </section>
-
-</main>
-
-<script>
-
-    const user =
-        JSON.parse(localStorage.getItem("user"));
-
-    if (user) {
-
-        document.getElementById(
-            "welcomeMessage"
-        ).textContent =
-            `Welcome, ${user.name}!`;
-
-    }
-
-    function logout() {
-
-        localStorage.removeItem("user");
-
-        window.location.href = "/";
-
-    }
-
-</script>
-
+    <!-- Load instructor courses from the API -->
+    <script src="/js/instructor.js"></script>
 </body>
-
 </html>
