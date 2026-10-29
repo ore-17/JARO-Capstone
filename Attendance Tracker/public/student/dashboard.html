@@ -1,173 +1,144 @@
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>Student Dashboard</title>
-
+    <title>Student Dashboard | Attendance Tracker</title>
     <link rel="stylesheet" href="/css/style.css">
-
 </head>
 
 <body>
+    <header>
+        <h1>Attendance Tracker</h1>
 
-<header>
+        <nav>
+            <a href="/student/dashboard.html">Dashboard</a>
+            <a href="#courses">My Courses</a>
+            <a href="#attendance">Attendance</a>
+            <a href="#reports">Reports</a>
+            <a href="#profile">Profile</a>
+            <button type="button" id="logoutButton">Logout</button>
+        </nav>
+    </header>
 
-    <h1>Attendace Tracker</h1>
+    <main>
+        <h2>Student Dashboard</h2>
 
-    <nav>
+        <p id="currentDate"></p>
+        <p id="welcomeMessage">Welcome!</p>
+        <p id="dashboardMessage" role="status">Loading your dashboard...</p>
 
-        <a href="/student/dashboard.html">
-            Dashboard
-        </a>
+        <section class="cards" aria-label="Attendance summary">
+            <div class="card">
+                <h3>My Courses</h3>
+                <p id="courseCount">--</p>
+            </div>
 
-        <a href="#">
-            My Courses
-        </a>
+            <div class="card">
+                <h3>Attendance Rate</h3>
+                <p id="attendanceRate">--</p>
+            </div>
 
-        <a href="#">
-            Attendance
-        </a>
+            <div class="card">
+                <h3>Present</h3>
+                <p id="presentCount">--</p>
+            </div>
 
-        <a href="#">
-            Reports
-        </a>
+            <div class="card">
+                <h3>Absent</h3>
+                <p id="absentCount">--</p>
+            </div>
+        </section>
 
-        <a href="#">
-            Profile
-        </a>
+        <section class="content-box" id="courses">
+            <h2>My Courses</h2>
 
-        <button onclick="logout()">
-            Logout
-        </button>
+            <div id="courseList">
+                <p>Your courses will appear here.</p>
+            </div>
+        </section>
 
-    </nav>
+        <section class="content-box" id="attendance">
+            <h2>Recent Attendance</h2>
 
-</header>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Course</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
 
-<main>
+                    <tbody id="attendanceTableBody">
+                        <tr>
+                            <td colspan="3">
+                                Attendance records will appear here.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-    <h2>Student Dashboard</h2>
+        <section class="content-box" id="reports">
+            <h2>Attendance Reports</h2>
+            <p id="reportMessage">
+                Your attendance summary will appear here when connected.
+            </p>
+        </section>
 
-    <p id="welcomeMessage">
-        Welcome!
-    </p>
+        <section class="content-box" id="profile">
+            <h2>My Profile</h2>
+            <p><strong>Name:</strong> <span id="studentName">--</span></p>
+            <p><strong>Email:</strong> <span id="studentEmail">--</span></p>
+        </section>
+    </main>
 
-    <div class="cards">
+    <script>
+        // Display today's date automatically.
+        document.getElementById("currentDate").textContent =
+            new Date().toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            });
 
-        <div class="card">
+        // Read the logged-in user's information.
+        let user = null;
 
-            <h3>My Courses</h3>
+        try {
+            user = JSON.parse(localStorage.getItem("user"));
+        } catch (error) {
+            localStorage.removeItem("user");
+        }
 
-            <p>4</p>
+        if (!user || user.role !== "student") {
+            window.location.href = "/";
+        } else {
+            document.getElementById("welcomeMessage").textContent =
+                `Welcome, ${user.name}!`;
 
-        </div>
+            document.getElementById("studentName").textContent =
+                user.name || "--";
 
-        <div class="card">
+            document.getElementById("studentEmail").textContent =
+                user.email || "--";
+        }
 
-            <h3>Attendance Rate</h3>
+        document.getElementById("logoutButton").addEventListener(
+            "click",
+            function () {
+                localStorage.removeItem("user");
+                window.location.href = "/";
+            }
+        );
+    </script>
 
-            <p>92%</p>
-
-        </div>
-
-        <div class="card">
-
-            <h3>Present</h3>
-
-            <p>23</p>
-
-        </div>
-
-        <div class="card">
-
-            <h3>Absent</h3>
-
-            <p>2</p>
-
-        </div>
-
-    </div>
-
-    <section class="content-box">
-
-        <h2>Recent Attendance</h2>
-
-        <table>
-
-            <tr>
-
-                <th>Course</th>
-                <th>Date</th>
-                <th>Status</th>
-
-            </tr>
-
-            <tr>
-
-                <td>CSCE 3444</td>
-                <td>October 5</td>
-                <td class="present">
-                    Present
-                </td>
-
-            </tr>
-
-            <tr>
-
-                <td>CSCE 3110</td>
-                <td>October 3</td>
-                <td class="present">
-                    Present
-                </td>
-
-            </tr>
-
-            <tr>
-
-                <td>MATH 2730</td>
-                <td>October 1</td>
-                <td class="absent">
-                    Absent
-                </td>
-
-            </tr>
-
-        </table>
-
-    </section>
-
-</main>
-
-<script>
-
-    const user =
-        JSON.parse(localStorage.getItem("user"));
-
-    if (user) {
-
-        document.getElementById(
-            "welcomeMessage"
-        ).textContent =
-            `Welcome, ${user.name}!`;
-
-    }
-
-    function logout() {
-
-        localStorage.removeItem("user");
-
-        window.location.href = "/";
-
-    }
-
-</script>
-
+    <script src="/js/student.js"></script>
 </body>
-
 </html>
