@@ -1,0 +1,529 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance | Attendance Tracker</title>
+    <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        .attendance-container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .attendance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .attendance-panel {
+            background: white;
+            color: #222;
+            padding: 22px;
+            margin-top: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .attendance-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .attendance-filters label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+
+        .attendance-filters select,
+        .attendance-filters input {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .attendance-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .attendance-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .attendance-table th,
+        .attendance-table td {
+            text-align: left;
+            padding: 13px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .attendance-table th {
+            background: #f3f5f8;
+        }
+
+        .status-select {
+            min-width: 125px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .attendance-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .summary-card {
+            background: #f3f5f8;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .summary-card p {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 8px 0 0;
+        }
+
+        .attendance-button {
+            border: none;
+            padding: 11px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px 5px 5px 0;
+        }
+
+        .save-button {
+            background: #174ea6;
+            color: white;
+        }
+
+        .secondary-button {
+            background: #e8edf5;
+            color: #222;
+        }
+
+        .attendance-button:hover {
+            opacity: 0.9;
+        }
+
+        #message {
+            margin-top: 15px;
+        }
+
+        .empty-message {
+            padding: 15px 0;
+        }
+
+        @media (max-width: 600px) {
+            .attendance-container {
+                padding: 0 12px;
+            }
+
+            .attendance-panel {
+                padding: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Attendance Tracker</h1>
+
+        <nav>
+            <a href="/instructor/dashboard.html">Dashboard</a>
+            <a href="/instructor/courses.html">My Courses</a>
+            <a href="/instructor/students.html">Students</a>
+            <a href="/instructor/attendance.html" aria-current="page">Attendance</a>
+            <a href="/instructor/reports.html">Reports</a>
+            <button type="button" onclick="logout()">Logout</button>
+        </nav>
+    </header>
+
+    <main class="attendance-container">
+        <div class="attendance-header">
+            <div>
+                <h2>Take Attendance</h2>
+                <p>Select a course and date, then record each student's status.</p>
+            </div>
+        </div>
+
+        <section class="attendance-panel">
+            <h3>Class Details</h3>
+
+            <div class="attendance-filters">
+                <div>
+                    <label for="courseSelect">Course</label>
+                    <select id="courseSelect">
+                        <option value="CSCE 3444">CSCE 3444 - Software Engineering</option>
+                        <option value="CSCE 3110">CSCE 3110 - Data Structures</option>
+                        <option value="CSCE 3600">CSCE 3600 - Systems Programming</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="attendanceDate">Date</label>
+                    <input type="date" id="attendanceDate" required>
+                </div>
+
+                <div>
+                    <label for="studentSearch">Find Student</label>
+                    <input
+                        type="search"
+                        id="studentSearch"
+                        placeholder="Search name or student ID"
+                    >
+                </div>
+            </div>
+
+            <div class="attendance-summary">
+                <div class="summary-card">
+                    Present
+                    <p id="presentCount">0</p>
+                </div>
+
+                <div class="summary-card">
+                    Absent
+                    <p id="absentCount">0</p>
+                </div>
+
+                <div class="summary-card">
+                    Excused
+                    <p id="excusedCount">0</p>
+                </div>
+
+                <div class="summary-card">
+                    Unmarked
+                    <p id="unmarkedCount">0</p>
+                </div>
+            </div>
+
+            <div class="attendance-table-wrapper">
+                <table class="attendance-table">
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Student Name</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceTableBody"></tbody>
+                </table>
+            </div>
+
+            <p id="emptyMessage" class="empty-message" hidden>
+                No students match your search.
+            </p>
+
+            <div>
+                <button
+                    type="button"
+                    class="attendance-button secondary-button"
+                    id="markAllPresent"
+                >
+                    Mark All Present
+                </button>
+
+                <button
+                    type="button"
+                    class="attendance-button secondary-button"
+                    id="markAllExcused"
+                >
+                    Mark All Excused
+                </button>
+
+                <button
+                    type="button"
+                    class="attendance-button save-button"
+                    id="saveAttendance"
+                >
+                    Save Attendance
+                </button>
+            </div>
+
+            <p id="message" role="status" aria-live="polite"></p>
+        </section>
+    </main>
+
+    <script>
+        const STORAGE_KEY = "attendanceTrackerRecords";
+
+        // Sample students for demonstration.
+        // Replace with students enrolled in each course from your API.
+        const students = [
+            { id: "1001", name: "Raymond Bassina" },
+            { id: "1002", name: "Sarah Johnson" },
+            { id: "1003", name: "Michael Brown" },
+            { id: "1004", name: "Aisha Mohammed" },
+            { id: "1005", name: "Daniel Wilson" }
+        ];
+
+        const courseSelect = document.getElementById("courseSelect");
+        const dateInput = document.getElementById("attendanceDate");
+        const searchInput = document.getElementById("studentSearch");
+        const tableBody = document.getElementById("attendanceTableBody");
+        const message = document.getElementById("message");
+
+        function getLocalDate() {
+            const today = new Date();
+
+            return [
+                today.getFullYear(),
+                String(today.getMonth() + 1).padStart(2, "0"),
+                String(today.getDate()).padStart(2, "0")
+            ].join("-");
+        }
+
+        dateInput.value = getLocalDate();
+
+        function loadRecords() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+
+                if (!saved) return [];
+
+                const parsed = JSON.parse(saved);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                console.error("Unable to load attendance:", error);
+                return [];
+            }
+        }
+
+        let records = loadRecords();
+
+        function getCurrentCourse() {
+            return courseSelect.value;
+        }
+
+        function getCurrentDate() {
+            return dateInput.value;
+        }
+
+        function getRecord(course, date, studentId) {
+            return records.find(record =>
+                record.course === course &&
+                record.date === date &&
+                record.studentId === studentId
+            );
+        }
+
+        function renderStudents() {
+            const search = searchInput.value.trim().toLowerCase();
+            const course = getCurrentCourse();
+            const date = getCurrentDate();
+
+            tableBody.replaceChildren();
+
+            const filteredStudents = students.filter(student =>
+                student.name.toLowerCase().includes(search) ||
+                student.id.toLowerCase().includes(search)
+            );
+
+            filteredStudents.forEach(student => {
+                const row = document.createElement("tr");
+
+                const idCell = document.createElement("td");
+                idCell.textContent = student.id;
+
+                const nameCell = document.createElement("td");
+                nameCell.textContent = student.name;
+
+                const statusCell = document.createElement("td");
+                const select = document.createElement("select");
+
+                select.className = "status-select";
+                select.dataset.studentId = student.id;
+                select.setAttribute(
+                    "aria-label",
+                    `Attendance status for ${student.name}`
+                );
+
+                const options = [
+                    { value: "", label: "Select status" },
+                    { value: "Present", label: "Present" },
+                    { value: "Absent", label: "Absent" },
+                    { value: "Excused", label: "Excused" }
+                ];
+
+                options.forEach(item => {
+                    const option = document.createElement("option");
+                    option.value = item.value;
+                    option.textContent = item.label;
+                    select.appendChild(option);
+                });
+
+                const existing = getRecord(course, date, student.id);
+
+                if (existing) {
+                    select.value = existing.status;
+                }
+
+                select.addEventListener("change", () => {
+                    message.textContent = "";
+                    updateSummary();
+                });
+
+                statusCell.appendChild(select);
+                row.append(idCell, nameCell, statusCell);
+                tableBody.appendChild(row);
+            });
+
+            document.getElementById("emptyMessage").hidden =
+                filteredStudents.length > 0;
+
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const selects = [
+                ...tableBody.querySelectorAll(".status-select")
+            ];
+
+            document.getElementById("presentCount").textContent =
+                selects.filter(select => select.value === "Present").length;
+
+            document.getElementById("absentCount").textContent =
+                selects.filter(select => select.value === "Absent").length;
+
+            document.getElementById("excusedCount").textContent =
+                selects.filter(select => select.value === "Excused").length;
+
+            document.getElementById("unmarkedCount").textContent =
+                selects.filter(select => select.value === "").length;
+        }
+
+        function saveAttendance() {
+            const course = getCurrentCourse();
+            const date = getCurrentDate();
+
+            if (!date) {
+                message.textContent = "Please select a date first.";
+                return;
+            }
+
+            // Require all students in the course to be marked,
+            // even when the search field is filtering the table.
+            const courseStudents = students;
+            const missingStudents = courseStudents.filter(student => {
+                const select = tableBody.querySelector(
+                    `.status-select[data-student-id="${student.id}"]`
+                );
+
+                if (select) {
+                    return !select.value;
+                }
+
+                const existing = getRecord(course, date, student.id);
+                return !existing || !existing.status;
+            });
+
+            if (missingStudents.length > 0) {
+                message.textContent =
+                    "Please mark every student Present, Absent, or Excused before saving.";
+                return;
+            }
+
+            // Save all students for this course and date.
+            courseStudents.forEach(student => {
+                const select = tableBody.querySelector(
+                    `.status-select[data-student-id="${student.id}"]`
+                );
+
+                const existing = getRecord(course, date, student.id);
+                const status = select ? select.value : existing.status;
+
+                const record = {
+                    course,
+                    date,
+                    studentId: student.id,
+                    studentName: student.name,
+                    status
+                };
+
+                const index = records.findIndex(item =>
+                    item.course === course &&
+                    item.date === date &&
+                    item.studentId === student.id
+                );
+
+                if (index >= 0) {
+                    records[index] = record;
+                } else {
+                    records.push(record);
+                }
+            });
+
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+                message.textContent = "Attendance saved successfully.";
+                renderStudents();
+            } catch (error) {
+                console.error("Unable to save attendance:", error);
+                message.textContent =
+                    "Could not save attendance in this browser.";
+            }
+        }
+
+        function markDisplayedStudents(status) {
+            tableBody.querySelectorAll(".status-select").forEach(select => {
+                select.value = status;
+            });
+
+            updateSummary();
+            message.textContent =
+                `Displayed students marked ${status}. Click Save Attendance to save.`;
+        }
+
+        document.getElementById("markAllPresent").addEventListener("click", () => {
+            markDisplayedStudents("Present");
+        });
+
+        document.getElementById("markAllExcused").addEventListener("click", () => {
+            markDisplayedStudents("Excused");
+        });
+
+        document.getElementById("saveAttendance").addEventListener(
+            "click",
+            saveAttendance
+        );
+
+        courseSelect.addEventListener("change", () => {
+            message.textContent = "";
+            renderStudents();
+        });
+
+        dateInput.addEventListener("change", () => {
+            message.textContent = "";
+            renderStudents();
+        });
+
+        searchInput.addEventListener("input", () => {
+            message.textContent = "";
+            renderStudents();
+        });
+
+        function logout() {
+            localStorage.removeItem("user");
+            window.location.href = "/";
+        }
+
+        renderStudents();
+    </script>
+</body>
+</html>
