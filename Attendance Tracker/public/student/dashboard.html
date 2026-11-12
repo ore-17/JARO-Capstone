@@ -6,6 +6,34 @@
 
     <title>Student Dashboard | Attendance Tracker</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        nav button[data-view] {
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: white;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        nav button[data-view]:hover,
+        nav button[data-view][aria-current="page"] {
+            text-decoration: underline;
+        }
+
+        [data-panel][hidden] { display: none; }
+
+        .table-container { overflow-x: auto; }
+
+        @media (max-width: 700px) {
+            nav { flex-wrap: wrap; }
+            .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+    </style>
 </head>
 
 <body>
@@ -13,16 +41,17 @@
         <h1>Attendance Tracker</h1>
 
         <nav>
-            <a href="/student/dashboard.html">Dashboard</a>
-            <a href="#courses">My Courses</a>
-            <a href="#attendance">Attendance</a>
-            <a href="#reports">Reports</a>
-            <a href="#profile">Profile</a>
+            <button type="button" data-view="overview" aria-current="page">Dashboard</button>
+            <button type="button" data-view="courses">My Courses</button>
+            <button type="button" data-view="attendance">Attendance</button>
+            <button type="button" data-view="reports">Reports</button>
+            <button type="button" data-view="profile">Profile</button>
             <button type="button" id="logoutButton">Logout</button>
         </nav>
     </header>
 
     <main>
+        <section data-panel="overview">
         <h2>Student Dashboard</h2>
 
         <p id="currentDate"></p>
@@ -50,8 +79,9 @@
                 <p id="absentCount">--</p>
             </div>
         </section>
+        </section>
 
-        <section class="content-box" id="courses">
+        <section class="content-box" id="courses" data-panel="courses" hidden>
             <h2>My Courses</h2>
 
             <div id="courseList">
@@ -59,7 +89,7 @@
             </div>
         </section>
 
-        <section class="content-box" id="attendance">
+        <section class="content-box" id="attendance" data-panel="attendance" hidden>
             <h2>Recent Attendance</h2>
 
             <div class="table-container">
@@ -83,14 +113,14 @@
             </div>
         </section>
 
-        <section class="content-box" id="reports">
+        <section class="content-box" id="reports" data-panel="reports" hidden>
             <h2>Attendance Reports</h2>
             <p id="reportMessage">
                 Your attendance summary will appear here when connected.
             </p>
         </section>
 
-        <section class="content-box" id="profile">
+        <section class="content-box" id="profile" data-panel="profile" hidden>
             <h2>My Profile</h2>
             <p><strong>Name:</strong> <span id="studentName">--</span></p>
             <p><strong>Email:</strong> <span id="studentEmail">--</span></p>
@@ -136,6 +166,19 @@
                 window.location.href = "/";
             }
         );
+
+        const viewButtons = document.querySelectorAll("[data-view]");
+        const viewPanels = document.querySelectorAll("[data-panel]");
+        viewButtons.forEach((button) => button.addEventListener("click", () => {
+            const selectedView = button.dataset.view;
+            viewButtons.forEach((item) => {
+                if (item.dataset.view === selectedView) item.setAttribute("aria-current", "page");
+                else item.removeAttribute("aria-current");
+            });
+            viewPanels.forEach((panel) => {
+                panel.hidden = panel.dataset.panel !== selectedView;
+            });
+        }));
     </script>
 
     <script src="/js/student.js"></script>
