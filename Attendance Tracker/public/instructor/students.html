@@ -7,8 +7,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Student Records</title>
+    <script>if (new URLSearchParams(location.search).has("embedded")) document.documentElement.classList.add("embedded-view");</script>
 
     <style>
+        .embedded-view .page-header { display: none; }
+        .embedded-view .container { margin-top: 10px; }
         * {
             box-sizing: border-box;
         }

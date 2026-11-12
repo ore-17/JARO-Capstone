@@ -6,8 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Courses | Attendance Tracker</title>
     <link rel="stylesheet" href="/css/style.css">
+    <script>if (new URLSearchParams(location.search).has("embedded")) document.documentElement.classList.add("embedded-view");</script>
 
     <style>
+        .embedded-view body > header { display: none; }
+        .embedded-view .courses-container { margin-top: 10px; }
         .courses-container {
             max-width: 1200px;
             margin: 30px auto;

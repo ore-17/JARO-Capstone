@@ -116,6 +116,31 @@
             text-decoration: underline;
         }
 
+        .dashboard-nav button[data-view] {
+            border: 0;
+            background: transparent;
+            color: white;
+            font: inherit;
+            font-size: 17px;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .dashboard-nav button[data-view]:hover,
+        .dashboard-nav button[aria-current="page"] {
+            text-decoration: underline;
+        }
+
+        .dashboard-view[hidden] { display: none; }
+
+        .dashboard-embed {
+            display: block;
+            width: 100%;
+            min-height: 850px;
+            border: 0;
+            background: #f4f6f9;
+        }
+
         @media (max-width: 800px) {
             .dashboard-grid {
                 grid-template-columns: 1fr;
@@ -131,12 +156,11 @@
 <body>
     <!-- Navigation -->
     <nav class="dashboard-nav">
-        <a href="/instructor/dashboard.html">Dashboard</a>
-        <a href="/instructor/courses.html">My Courses</a>
-        <a href="/instructor/attendance.html">Attendance</a>
-        <a href="/instructor/students.html">Students</a>
-        <a href="/instructor/reports.html">Reports</a>
-        <a href="#course-details">Course Details</a>
+        <button type="button" data-view="overview" aria-current="page">Dashboard</button>
+        <button type="button" data-view="courses">My Courses</button>
+        <button type="button" data-view="attendance">Attendance</button>
+        <button type="button" data-view="students">Students</button>
+        <button type="button" data-view="reports">Reports</button>
 
         <button
             type="button"
@@ -147,6 +171,7 @@
     </nav>
 
     <main class="dashboard-container" id="dashboard">
+      <div class="dashboard-view" data-panel="overview">
         <!-- Welcome section -->
         <header class="dashboard-header">
             <h1>Instructor Dashboard</h1>
@@ -214,15 +239,23 @@
             </div>
         </section>
 
-        <!-- Future functionality -->
-        <section class="content-section">
-            <h2>Attendance Management</h2>
-
-            <p>
-                Attendance management will be available in a future
-                development stage.
-            </p>
-        </section>
+      </div>
+      <section class="content-section dashboard-view" data-panel="courses" hidden>
+        <h2>My Courses</h2>
+        <iframe class="dashboard-embed" title="Course management" src="/instructor/courses.html?embedded=1"></iframe>
+      </section>
+      <section class="content-section dashboard-view" data-panel="attendance" hidden>
+        <h2>Attendance</h2>
+        <iframe class="dashboard-embed" title="Attendance management" src="/instructor/attendance.html?embedded=1"></iframe>
+      </section>
+      <section class="content-section dashboard-view" data-panel="students" hidden>
+        <h2>Students</h2>
+        <iframe class="dashboard-embed" title="Student records" src="/instructor/students.html?embedded=1"></iframe>
+      </section>
+      <section class="content-section dashboard-view" data-panel="reports" hidden>
+        <h2>Reports</h2>
+        <iframe class="dashboard-embed" title="Attendance reports" src="/instructor/reports.html?embedded=1"></iframe>
+      </section>
     </main>
 
     <!-- Login and dashboard setup -->
@@ -262,6 +295,19 @@
                 window.location.href = "/";
             }
         );
+
+        const viewButtons = document.querySelectorAll("[data-view]");
+        const viewPanels = document.querySelectorAll("[data-panel]");
+        viewButtons.forEach((button) => button.addEventListener("click", () => {
+            const selectedView = button.dataset.view;
+            viewButtons.forEach((item) => {
+                if (item.dataset.view === selectedView) item.setAttribute("aria-current", "page");
+                else item.removeAttribute("aria-current");
+            });
+            viewPanels.forEach((panel) => {
+                panel.hidden = panel.dataset.panel !== selectedView;
+            });
+        }));
     </script>
 
     <!-- Load instructor courses from the API -->
