@@ -1,0 +1,732 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Attendance Reports</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f4f6f9;
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+
+        header {
+            background: #14532d;
+            color: white;
+            padding: 25px 40px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 35px auto;
+            padding: 0 20px;
+        }
+
+        .page-heading {
+            margin-bottom: 25px;
+        }
+
+        .page-heading h2 {
+            color: #14532d;
+            margin-bottom: 8px;
+        }
+
+        .page-heading p {
+            color: #666;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .panel h3 {
+            color: #14532d;
+            margin-top: 0;
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(190px, 1fr)
+            );
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .filters label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .filters select,
+        .filters input {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .filters select:focus,
+        .filters input:focus {
+            outline: none;
+            border-color: #14532d;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(150px, 1fr)
+            );
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .summary-card {
+            padding: 20px;
+            border-radius: 7px;
+            background: #e4f1e8;
+        }
+
+        .summary-card p {
+            font-size: 27px;
+            font-weight: bold;
+            margin: 10px 0 0;
+        }
+
+        .present {
+            background: #e4f1e8;
+            color: #166534;
+        }
+
+        .absent {
+            background: #fce8e8;
+            color: #b42318;
+        }
+
+        .excused {
+            background: #fff3d9;
+            color: #9a6700;
+        }
+
+        .late {
+            background: #e8eff8;
+            color: #24558a;
+        }
+
+        .total {
+            background: #eeeeee;
+            color: #333;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            max-width: 350px;
+            padding: 11px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .button {
+            border: none;
+            padding: 11px 17px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .print-button {
+            background: #14532d;
+            color: white;
+        }
+
+        .print-button:hover {
+            background: #0f4224;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #14532d;
+            color: white;
+        }
+
+        tbody tr:hover {
+            background: #f3f8f4;
+        }
+
+        .warning {
+            color: #b42318;
+            font-weight: bold;
+        }
+
+        .good {
+            color: #166534;
+            font-weight: bold;
+        }
+
+        .empty-message {
+            color: #777;
+            padding: 20px 0;
+        }
+
+        #message {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            header {
+                background: white;
+                color: black;
+                border-bottom: 2px solid #14532d;
+            }
+
+            .filters,
+            .print-button,
+            .search-input {
+                display: none !important;
+            }
+
+            .panel {
+                box-shadow: none;
+                border: 1px solid #ddd;
+                break-inside: avoid;
+            }
+
+            .container {
+                max-width: 100%;
+                margin: 15px;
+                padding: 0;
+            }
+
+            table {
+                min-width: 0;
+            }
+
+            th {
+                background: #eeeeee !important;
+                color: black !important;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Attendance Reports</h1>
+    </header>
+
+    <main class="container">
+
+        <div class="page-heading">
+            <h2>Attendance Overview</h2>
+            <p>
+                Review student attendance records and course performance.
+            </p>
+        </div>
+
+        <p id="message" role="status">
+            Loading attendance records...
+        </p>
+
+        <!-- Filters -->
+        <section class="panel">
+
+            <h3>Report Filters</h3>
+
+            <div class="filters">
+
+                <div>
+                    <label for="courseFilter">Course</label>
+
+                    <select id="courseFilter">
+                        <option value="all">All Courses</option>
+                        <option value="CSCE 3444">
+                            CSCE 3444 - Software Engineering
+                        </option>
+                        <option value="CSCE 3110">
+                            CSCE 3110 - Data Structures
+                        </option>
+                        <option value="CSCE 3600">
+                            CSCE 3600 - Systems Programming
+                        </option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="startDate">Start Date</label>
+                    <input type="date" id="startDate">
+                </div>
+
+                <div>
+                    <label for="endDate">End Date</label>
+                    <input type="date" id="endDate">
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- Attendance Summary -->
+        <section class="panel">
+
+            <h3>Attendance Summary</h3>
+
+            <div class="summary-grid">
+
+                <div class="summary-card total">
+                    Total Records
+                    <p id="totalCount">0</p>
+                </div>
+
+                <div class="summary-card present">
+                    Present
+                    <p id="presentCount">0</p>
+                </div>
+
+                <div class="summary-card absent">
+                    Absent
+                    <p id="absentCount">0</p>
+                </div>
+
+                <div class="summary-card excused">
+                    Excused
+                    <p id="excusedCount">0</p>
+                </div>
+
+                <div class="summary-card late">
+                    Late
+                    <p id="lateCount">0</p>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- Student Summary -->
+        <section class="panel">
+
+            <div class="toolbar">
+                <h3>Student Attendance Summary</h3>
+
+                <button
+                    type="button"
+                    class="button print-button"
+                    onclick="window.print()"
+                >
+                    Print Report
+                </button>
+            </div>
+
+            <input
+                type="search"
+                id="studentSearch"
+                class="search-input"
+                placeholder="Search student name or ID..."
+            >
+
+            <div class="table-wrapper" style="margin-top: 20px;">
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Student Name</th>
+                            <th>Present</th>
+                            <th>Absent</th>
+                            <th>Excused</th>
+                            <th>Late</th>
+                            <th>Attendance %</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="studentSummaryBody"></tbody>
+                </table>
+
+            </div>
+
+            <p id="emptyStudents" class="empty-message" hidden>
+                No student records found.
+            </p>
+
+        </section>
+
+        <!-- Attendance History -->
+        <section class="panel">
+
+            <h3>Attendance History</h3>
+
+            <div class="table-wrapper">
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Course</th>
+                            <th>Student ID</th>
+                            <th>Student Name</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="historyBody"></tbody>
+                </table>
+
+            </div>
+
+            <p id="emptyHistory" class="empty-message" hidden>
+                No attendance history found.
+            </p>
+
+        </section>
+
+    </main>
+
+    <footer>
+        <p>Attendance Reports</p>
+    </footer>
+
+    <script>
+        const STORAGE_KEY = "attendanceTrackerRecords";
+
+        const courseFilter =
+            document.getElementById("courseFilter");
+
+        const startDate =
+            document.getElementById("startDate");
+
+        const endDate =
+            document.getElementById("endDate");
+
+        const studentSearch =
+            document.getElementById("studentSearch");
+
+        const studentSummaryBody =
+            document.getElementById("studentSummaryBody");
+
+        const historyBody =
+            document.getElementById("historyBody");
+
+        const message =
+            document.getElementById("message");
+
+        // Read attendance records saved by attendance.html.
+        function loadRecords() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+
+                if (!saved) {
+                    return [];
+                }
+
+                const parsed = JSON.parse(saved);
+
+                return Array.isArray(parsed) ? parsed : [];
+
+            } catch (error) {
+                console.error("Unable to read reports:", error);
+                return [];
+            }
+        }
+
+        let records = loadRecords();
+
+        // Get records matching the selected filters.
+        function getFilteredRecords() {
+            const selectedCourse = courseFilter.value;
+            const from = startDate.value;
+            const to = endDate.value;
+
+            if (from && to && from > to) {
+                message.textContent =
+                    "Start date cannot be after end date.";
+
+                return null;
+            }
+
+            message.textContent = "";
+
+            return records.filter(record => {
+
+                const matchesCourse =
+                    selectedCourse === "all" ||
+                    record.course === selectedCourse;
+
+                const matchesStart =
+                    !from || record.date >= from;
+
+                const matchesEnd =
+                    !to || record.date <= to;
+
+                return (
+                    matchesCourse &&
+                    matchesStart &&
+                    matchesEnd
+                );
+            });
+        }
+
+        // Calculate attendance totals.
+        function updateSummary(filteredRecords) {
+            const counts = {
+                present: 0,
+                absent: 0,
+                excused: 0,
+                late: 0
+            };
+
+            filteredRecords.forEach(record => {
+                const status = String(record.status).toLowerCase();
+
+                if (Object.prototype.hasOwnProperty.call(counts, status)) {
+                    counts[status]++;
+                }
+            });
+
+            document.getElementById("totalCount").textContent =
+                filteredRecords.length;
+
+            document.getElementById("presentCount").textContent =
+                counts.present;
+
+            document.getElementById("absentCount").textContent =
+                counts.absent;
+
+            document.getElementById("excusedCount").textContent =
+                counts.excused;
+
+            document.getElementById("lateCount").textContent =
+                counts.late;
+        }
+
+        // Build student attendance summaries.
+        function updateStudentSummary(filteredRecords) {
+            studentSummaryBody.replaceChildren();
+
+            const search = studentSearch.value
+                .trim()
+                .toLowerCase();
+
+            const students = {};
+
+            filteredRecords.forEach(record => {
+                const id = String(record.studentId);
+
+                if (!students[id]) {
+                    students[id] = {
+                        id,
+                        name: record.studentName || "Unknown student",
+                        present: 0,
+                        absent: 0,
+                        excused: 0,
+                        late: 0
+                    };
+                }
+
+                const status = String(record.status).toLowerCase();
+
+                if (
+                    Object.prototype.hasOwnProperty.call(
+                        students[id], status
+                    )
+                ) {
+                    students[id][status]++;
+                }
+            });
+
+            const studentList = Object.values(students).filter(student => {
+                return (
+                    student.name.toLowerCase().includes(search) ||
+                    student.id.toLowerCase().includes(search)
+                );
+            });
+
+            document.getElementById("emptyStudents").hidden =
+                studentList.length > 0;
+
+            studentList.forEach(student => {
+                const row = document.createElement("tr");
+
+                const total =
+                    student.present +
+                    student.absent +
+                    student.late;
+
+                // Excused records are excluded from the percentage.
+                const percentage = total > 0
+                    ? ((student.present + student.late) / total) * 100
+                    : 0;
+
+                const values = [
+                    student.id,
+                    student.name,
+                    student.present,
+                    student.absent,
+                    student.excused,
+                    student.late
+                ];
+
+                values.forEach(value => {
+                    const cell = document.createElement("td");
+                    cell.textContent = value;
+                    row.appendChild(cell);
+                });
+
+                const percentageCell = document.createElement("td");
+
+                percentageCell.textContent =
+                    total > 0 ? `${percentage.toFixed(1)}%` : "N/A";
+
+                if (total > 0 && percentage < 75) {
+                    percentageCell.className = "warning";
+                    percentageCell.textContent += " - Low";
+                } else if (total > 0) {
+                    percentageCell.className = "good";
+                }
+
+                row.appendChild(percentageCell);
+                studentSummaryBody.appendChild(row);
+            });
+        }
+
+        // Display individual attendance history.
+        function updateHistory(filteredRecords) {
+            historyBody.replaceChildren();
+
+            const sortedRecords = [...filteredRecords].sort((a, b) => {
+                return b.date.localeCompare(a.date);
+            });
+
+            document.getElementById("emptyHistory").hidden =
+                sortedRecords.length > 0;
+
+            sortedRecords.forEach(record => {
+                const row = document.createElement("tr");
+
+                const values = [
+                    record.date,
+                    record.course,
+                    record.studentId,
+                    record.studentName,
+                    record.status
+                ];
+
+                values.forEach((value, index) => {
+                    const cell = document.createElement("td");
+                    cell.textContent = value || "";
+
+                    if (index === 4) {
+                        const status = String(value).toLowerCase();
+
+                        if (
+                            ["present", "absent", "excused", "late"]
+                                .includes(status)
+                        ) {
+                            cell.className = status;
+                        }
+                    }
+
+                    row.appendChild(cell);
+                });
+
+                historyBody.appendChild(row);
+            });
+        }
+
+        // Refresh all reports.
+        function renderReports() {
+            const filteredRecords = getFilteredRecords();
+
+            if (filteredRecords === null) {
+                return;
+            }
+
+            updateSummary(filteredRecords);
+            updateStudentSummary(filteredRecords);
+            updateHistory(filteredRecords);
+
+            if (filteredRecords.length === 0) {
+                message.textContent =
+                    "No attendance records found for these filters.";
+            } else {
+                message.textContent =
+                    `${filteredRecords.length} attendance records found.`;
+            }
+        }
+
+        // Filter changes.
+        courseFilter.addEventListener("change", renderReports);
+        startDate.addEventListener("change", renderReports);
+        endDate.addEventListener("change", renderReports);
+        studentSearch.addEventListener("input", renderReports);
+
+        // Refresh records when the page becomes visible again.
+        window.addEventListener("focus", () => {
+            records = loadRecords();
+            renderReports();
+        });
+
+        // Initial report.
+        renderReports();
+    </script>
+
+</body>
+</html>
