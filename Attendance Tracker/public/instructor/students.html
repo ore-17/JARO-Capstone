@@ -1,0 +1,599 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Records</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background-color: #f4f6f9;
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+
+        /* Page Header */
+        .page-header {
+            background-color: #14532d;
+            color: white;
+            padding: 25px 40px;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 30px;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 25px;
+        }
+
+        .page-title {
+            margin-bottom: 25px;
+        }
+
+        .page-title h2 {
+            color: #14532d;
+            margin-bottom: 8px;
+        }
+
+        .page-title p {
+            color: #666;
+        }
+
+        #pageMessage {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        /* Sections */
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 25px;
+        }
+
+        .section h2 {
+            color: #14532d;
+            margin-top: 0;
+        }
+
+        /* Course Cards */
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(260px, 1fr)
+            );
+            gap: 20px;
+        }
+
+        .course-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 22px;
+            background: white;
+            transition: box-shadow 0.2s ease;
+        }
+
+        .course-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .course-card h3 {
+            color: #14532d;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .course-card p {
+            color: #555;
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        .course-card button {
+            width: 100%;
+            margin-top: 15px;
+            padding: 12px;
+            background: #14532d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .course-card button:hover {
+            background: #0f4224;
+        }
+
+        /* Student Records */
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .record-header h2 {
+            margin: 15px 0 5px;
+            color: #14532d;
+        }
+
+        .back-button {
+            background: #14532d;
+            color: white;
+            border: none;
+            padding: 10px 17px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .back-button:hover {
+            background: #0f4224;
+        }
+
+        .student-count {
+            background: #e4f1e8;
+            color: #14532d;
+            padding: 9px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        /* Search */
+        .search-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #14532d;
+        }
+
+        /* Student Table */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 550px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #14532d;
+            color: white;
+        }
+
+        tbody tr:hover {
+            background: #f3f8f4;
+        }
+
+        .empty-message {
+            color: #777;
+            padding: 15px 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .error-message {
+            color: #b00020 !important;
+        }
+
+        @media (max-width: 600px) {
+            .page-header {
+                padding: 22px;
+            }
+
+            .container {
+                padding: 0 15px;
+                margin-top: 25px;
+            }
+
+            .section {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <h1>Student Records</h1>
+    </header>
+
+    <main class="container">
+
+        <div class="page-title">
+            <h2 id="pageTitle">Select a Course</h2>
+            <p id="pageDescription">
+                Select a course below to view its enrolled students.
+            </p>
+        </div>
+
+        <p id="pageMessage">Loading courses...</p>
+
+        <!-- Courses -->
+        <section id="coursesSection" class="section">
+
+            <h2>Courses</h2>
+
+            <div id="courseList" class="course-grid">
+                <p class="empty-message">Loading courses...</p>
+            </div>
+
+        </section>
+
+        <!-- Student Records -->
+        <section id="studentsSection" class="section hidden">
+
+            <div class="record-header">
+
+                <div>
+                    <button
+                        type="button"
+                        class="back-button"
+                        onclick="showCourses()"
+                    >
+                        &larr; Back to Courses
+                    </button>
+
+                    <h2 id="selectedCourseName">
+                        Student Records
+                    </h2>
+
+                    <p id="selectedCourseTerm"></p>
+                </div>
+
+                <span id="studentCount" class="student-count">
+                    0 Students
+                </span>
+
+            </div>
+
+            <input
+                type="search"
+                id="studentSearch"
+                class="search-input"
+                placeholder="Search students by name, ID, or email..."
+                aria-label="Search students"
+            >
+
+            <div class="table-wrapper">
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Student Name</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="studentTableBody">
+                        <tr>
+                            <td colspan="3">
+                                Select a course to view its students.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        // Get logged-in instructor.
+        const instructorUser = JSON.parse(
+            localStorage.getItem("user") || "null"
+        );
+
+        // Page elements.
+        const pageMessage = document.getElementById("pageMessage");
+        const pageTitle = document.getElementById("pageTitle");
+        const pageDescription = document.getElementById("pageDescription");
+
+        const coursesSection = document.getElementById("coursesSection");
+        const studentsSection = document.getElementById("studentsSection");
+
+        const courseList = document.getElementById("courseList");
+        const studentTableBody =
+            document.getElementById("studentTableBody");
+
+        const studentSearch =
+            document.getElementById("studentSearch");
+
+        let currentStudents = [];
+
+        // Check instructor login.
+        if (!instructorUser ||
+            instructorUser.role !== "instructor") {
+
+            window.location.href = "/";
+        }
+
+        // Load instructor courses.
+        async function loadInstructorCourses() {
+            try {
+                pageMessage.textContent = "Loading courses...";
+                courseList.textContent = "Loading courses...";
+
+                const response = await fetch(
+                    `/api/courses?instructorId=${encodeURIComponent(instructorUser.id)}`
+                );
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(
+                        result.message || "Unable to load courses."
+                    );
+                }
+
+                const courses = result.data || [];
+
+                courseList.replaceChildren();
+
+                if (courses.length === 0) {
+                    courseList.innerHTML =
+                        '<p class="empty-message">No courses assigned to you.</p>';
+
+                    pageMessage.textContent = "No courses found.";
+                    return;
+                }
+
+                courses.forEach(course => {
+
+                    const card = document.createElement("div");
+                    card.className = "course-card";
+
+                    const title = document.createElement("h3");
+                    title.textContent =
+                        `${course.code} - ${course.name}`;
+
+                    const term = document.createElement("p");
+                    term.textContent = `Term: ${course.term}`;
+
+                    const schedule = document.createElement("p");
+                    schedule.textContent =
+                        `Schedule: ${course.schedule}`;
+
+                    const location = document.createElement("p");
+                    location.textContent =
+                        `Location: ${course.location}`;
+
+                    const count = document.createElement("p");
+                    count.textContent =
+                        `Students Enrolled: ${course.studentCount}`;
+
+                    const button = document.createElement("button");
+                    button.type = "button";
+                    button.textContent = "View Student Records";
+
+                    button.addEventListener("click", () => {
+                        loadCourseStudents(course);
+                    });
+
+                    card.append(
+                        title,
+                        term,
+                        schedule,
+                        location,
+                        count,
+                        button
+                    );
+
+                    courseList.appendChild(card);
+                });
+
+                pageMessage.textContent =
+                    "Select a course to view its student records.";
+
+            } catch (error) {
+                console.error("Course loading error:", error);
+
+                pageMessage.textContent = error.message;
+                pageMessage.classList.add("error-message");
+
+                courseList.textContent =
+                    "Unable to load courses. Please try again.";
+            }
+        }
+
+        // Load students for selected course.
+        async function loadCourseStudents(course) {
+            try {
+                pageMessage.textContent = "Loading student records...";
+
+                coursesSection.classList.add("hidden");
+                studentsSection.classList.remove("hidden");
+
+                pageTitle.textContent = "Student Records";
+
+                pageDescription.textContent =
+                    `Students enrolled in ${course.code}.`;
+
+                document.getElementById("selectedCourseName").textContent =
+                    `${course.code} - ${course.name}`;
+
+                document.getElementById("selectedCourseTerm").textContent =
+                    `Term: ${course.term}`;
+
+                studentTableBody.innerHTML =
+                    '<tr><td colspan="3">Loading students...</td></tr>';
+
+                studentSearch.value = "";
+
+                const response = await fetch(
+                    `/api/students?courseId=${encodeURIComponent(course.id)}&instructorId=${encodeURIComponent(instructorUser.id)}`
+                );
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(
+                        result.message || "Unable to load students."
+                    );
+                }
+
+                currentStudents = result.data || [];
+
+                document.getElementById("studentCount").textContent =
+                    `${currentStudents.length} Students`;
+
+                displayStudents(currentStudents);
+
+                pageMessage.textContent =
+                    "Student records loaded successfully.";
+
+                pageMessage.classList.remove("error-message");
+
+            } catch (error) {
+                console.error("Student loading error:", error);
+
+                currentStudents = [];
+
+                studentTableBody.innerHTML =
+                    `<tr><td colspan="3">${escapeHTML(error.message)}</td></tr>`;
+
+                document.getElementById("studentCount").textContent =
+                    "0 Students";
+
+                pageMessage.textContent =
+                    `Error: ${error.message}`;
+
+                pageMessage.classList.add("error-message");
+            }
+        }
+
+        // Display students.
+        function displayStudents(students) {
+            studentTableBody.replaceChildren();
+
+            if (students.length === 0) {
+                studentTableBody.innerHTML =
+                    '<tr><td colspan="3">No students found.</td></tr>';
+                return;
+            }
+
+            students.forEach(student => {
+
+                const row = document.createElement("tr");
+
+                const idCell = document.createElement("td");
+                idCell.textContent = student.id;
+
+                const nameCell = document.createElement("td");
+                nameCell.textContent = student.name;
+
+                const emailCell = document.createElement("td");
+                emailCell.textContent = student.email;
+
+                row.append(idCell, nameCell, emailCell);
+
+                studentTableBody.appendChild(row);
+            });
+        }
+
+        // Search students.
+        studentSearch.addEventListener("input", () => {
+
+            const searchValue =
+                studentSearch.value.toLowerCase().trim();
+
+            const filteredStudents = currentStudents.filter(student => {
+
+                return (
+                    String(student.name || "")
+                        .toLowerCase().includes(searchValue) ||
+
+                    String(student.id || "")
+                        .toLowerCase().includes(searchValue) ||
+
+                    String(student.email || "")
+                        .toLowerCase().includes(searchValue)
+                );
+            });
+
+            displayStudents(filteredStudents);
+        });
+
+        // Return to course selection.
+        function showCourses() {
+            studentsSection.classList.add("hidden");
+            coursesSection.classList.remove("hidden");
+
+            pageTitle.textContent = "Select a Course";
+
+            pageDescription.textContent =
+                "Select a course below to view its enrolled students.";
+
+            pageMessage.textContent =
+                "Select a course to view its student records.";
+
+            pageMessage.classList.remove("error-message");
+
+            currentStudents = [];
+            studentSearch.value = "";
+        }
+
+        // Escape HTML for error messages.
+        function escapeHTML(value) {
+            return String(value).replace(/[&<>"']/g, character => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#039;"
+            })[character]);
+        }
+
+        // Start page.
+        if (instructorUser &&
+            instructorUser.role === "instructor") {
+
+            loadInstructorCourses();
+        }
+    </script>
+
+</body>
+</html>
