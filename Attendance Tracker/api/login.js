@@ -12,35 +12,15 @@ module.exports = (req, res) => {
 
     const { email, password } = req.body || {};
 
-    // Temporary demo credentials for testing.
-    const demoAccounts = {
-        "student@test.com": {
-            password: "1234",
-            dataEmail: "alex@example.com"
-        },
-        "instructor@test.com": {
-            password: "1234",
-            dataEmail: "sarah@example.com"
-        }
-    };
+    // All sample users in api/data.js share this temporary demo password.
+    const user = users.find(
+        item => item.email.toLowerCase() === String(email).toLowerCase()
+    );
 
-    const account = demoAccounts[email];
-
-    if (!account || account.password !== password) {
+    if (!user || password !== "1234") {
         return res.status(401).json({
             success: false,
             message: "Invalid email or password."
-        });
-    }
-
-    const user = users.find(
-        item => item.email === account.dataEmail
-    );
-
-    if (!user) {
-        return res.status(500).json({
-            success: false,
-            message: "Demo user was not found in the data file."
         });
     }
 

@@ -136,8 +136,8 @@ These accounts are hardcoded for prototype testing only.
 
 | Role | Email | Password |
 |---|---|---|
-| Student | `student@test.com` | `1234` |
-| Instructor | `instructor@test.com` | `1234` |
+| Student | `alex@example.com`, `jordan@example.com`, `taylor@example.com` | `1234` |
+| Instructor | `sarah@example.com`, `michael@example.com` | `1234` |
 
 **Security warning:** Demo credentials and plaintext passwords are not suitable for production. Do not use real student data or deploy this as a secure attendance system until authentication, authorization, and data storage are properly implemented.
 
