@@ -147,6 +147,11 @@ These accounts are hardcoded for prototype testing only.
 |---|---|---|
 | `GET` | `/api/test` | Returns a basic API status message |
 | `POST` | `/api/login` | Checks demo credentials and returns basic user information |
+| `GET`, `POST`, `PUT`, `DELETE` | `/api/courses` | List and manage courses (query/body filters include `instructorId`, `studentId`, and `courseId`) |
+| `GET` | `/api/students?courseId=...&instructorId=...` | List students enrolled in a course |
+| `GET`, `POST` | `/api/sessions` | List class sessions or create a session |
+| `GET`, `POST` | `/api/attendance` | Retrieve attendance or record/update a student's status |
+| `GET` | `/api/reports?instructorId=...` | Return an instructor's enriched attendance history and status totals; optional filters: `courseId`, `studentId`, `startDate`, and `endDate` |
 
 The login API is for demonstration only; it does not issue secure sessions or tokens.
 

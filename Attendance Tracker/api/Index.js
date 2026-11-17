@@ -12,11 +12,20 @@ app.use(express.static(path.join(__dirname, "../public")));
 // Import API handlers
 const coursesHandler = require("./courses");
 const attendanceHandler = require("./attendance");
+const studentsHandler = require("./students");
+const sessionsHandler = require("./sessions");
+const loginHandler = require("./login");
+const reportsHandler = require("./reports");
 
 // Home page
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));
 });
+
+// Login API
+app.post("/api/login", (req, res) => {
+    return loginHandler(req, res);
+  });
 
 // API test route
 app.get("/api/test", (req, res) => {
@@ -35,6 +44,21 @@ app.all("/api/courses", (req, res) => {
 app.all("/api/attendance", (req, res) => {
   return attendanceHandler(req, res);
 });
+
+// Instructor attendance reports API
+app.all("/api/reports", (req, res) => {
+  return reportsHandler(req, res);
+});
+
+// Students API
+app.all("/api/students", (req, res) => {
+    return studentsHandler(req, res);
+  });
+
+// Class Sessions API
+app.all("/api/sessions", (req, res) => {
+    return sessionsHandler(req, res);
+  });
 
 // 404 handler
 app.use((req, res) => {
