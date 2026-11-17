@@ -2,18 +2,19 @@
 
 A web-based attendance tracking system developed as a capstone project. The goal is to help instructors manage course attendance and give students a straightforward way to view their attendance information.
 
-> **Project status:** Early prototype. The current application includes a demo login and separate student and instructor dashboards. Course management, actual attendance recording, roster imports, and reporting are planned functionality, not yet implemented.
+> **Project status:** Early prototype. It includes a demo login and separate student and instructor dashboards, with course, attendance, and report flows backed by in-memory API data.
 
 ## Current features
 
 - Login page with student and instructor demo accounts
 - Role-based redirects to separate dashboards
-- Student dashboard with sample course and attendance information
-- Instructor dashboard with sample course information and attendance controls
+- Student dashboard with API-backed courses and attendance summaries
+- Instructor dashboard with API-backed course, student, attendance, and report views
+- API-backed course management, class session selection, and attendance recording
 - Basic navigation and logout behavior
 - Test API endpoint for checking the server
 
-**Note:** Dashboard data is currently illustrative, and some navigation links and buttons are placeholders.
+**Note:** The API currently uses in-memory sample data. Course and attendance changes reset when the server restarts.
 
 ## Technology stack
 
@@ -136,8 +137,8 @@ These accounts are hardcoded for prototype testing only.
 
 | Role | Email | Password |
 |---|---|---|
-| Student | `student@test.com` | `1234` |
-| Instructor | `instructor@test.com` | `1234` |
+| Student | `alex@example.com`, `jordan@example.com`, `taylor@example.com` | `1234` |
+| Instructor | `sarah@example.com`, `michael@example.com` | `1234` |
 
 **Security warning:** Demo credentials and plaintext passwords are not suitable for production. Do not use real student data or deploy this as a secure attendance system until authentication, authorization, and data storage are properly implemented.
 
@@ -157,9 +158,7 @@ The login API is for demonstration only; it does not issue secure sessions or to
 
 ## Planned functionality
 
-- Create and manage multiple courses
 - Import student rosters
-- Create attendance sessions by course and date
 - Record present/absent attendance, including a semi-automated check-in method
 - Reduce fraudulent or duplicate check-ins
 - Store and retrieve attendance history
