@@ -275,6 +275,14 @@
 
     <header>
         <h1>Attendance Reports</h1>
+        <nav>
+            <a href="/instructor/dashboard.html">Dashboard</a>
+            <a href="/instructor/courses.html">My Courses</a>
+            <a href="/instructor/students.html">Students</a>
+            <a href="/instructor/attendance.html">Attendance</a>
+            <a href="/instructor/reports.html" aria-current="page">Reports</a>
+            <button type="button" onclick="logout()">Logout</button>
+        </nav>
     </header>
 
     <main class="container">
@@ -302,15 +310,6 @@
 
                     <select id="courseFilter">
                         <option value="all">All Courses</option>
-                        <option value="CSCE 3444">
-                            CSCE 3444 - Software Engineering
-                        </option>
-                        <option value="CSCE 3110">
-                            CSCE 3110 - Data Structures
-                        </option>
-                        <option value="CSCE 3600">
-                            CSCE 3600 - Systems Programming
-                        </option>
                     </select>
                 </div>
 
@@ -447,7 +446,7 @@
         <p>Attendance Reports</p>
     </footer>
 
-    <script>
+    <script type="application/x-inert">
         const STORAGE_KEY = "attendanceTrackerRecords";
 
         const courseFilter =
@@ -730,6 +729,7 @@
         // Initial report.
         renderReports();
     </script>
+    <script src="/js/reports.js"></script>
 
 </body>
 </html>

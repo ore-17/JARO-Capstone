@@ -2,18 +2,19 @@
 
 A web-based attendance tracking system developed as a capstone project. The goal is to help instructors manage course attendance and give students a straightforward way to view their attendance information.
 
-> **Project status:** Early prototype. The current application includes a demo login and separate student and instructor dashboards. Course management, actual attendance recording, roster imports, and reporting are planned functionality, not yet implemented.
+> **Project status:** Early prototype. It includes a demo login and separate student and instructor dashboards, with course, attendance, and report flows backed by in-memory API data.
 
 ## Current features
 
 - Login page with student and instructor demo accounts
 - Role-based redirects to separate dashboards
-- Student dashboard with sample course and attendance information
-- Instructor dashboard with sample course information and attendance controls
+- Student dashboard with API-backed courses and attendance summaries
+- Instructor dashboard with API-backed course, student, attendance, and report views
+- API-backed course management, class session selection, and attendance recording
 - Basic navigation and logout behavior
 - Test API endpoint for checking the server
 
-**Note:** Dashboard data is currently illustrative, and some navigation links and buttons are placeholders.
+**Note:** The API currently uses in-memory sample data. Course and attendance changes reset when the server restarts.
 
 ## Technology stack
 
@@ -147,14 +148,16 @@ These accounts are hardcoded for prototype testing only.
 |---|---|---|
 | `GET` | `/api/test` | Returns a basic API status message |
 | `POST` | `/api/login` | Checks demo credentials and returns basic user information |
+| `GET`, `POST`, `PUT`, `DELETE` | `/api/courses` | List and manage courses (query/body filters include `instructorId`, `studentId`, and `courseId`) |
+| `GET` | `/api/students?courseId=...&instructorId=...` | List students enrolled in a course |
+| `GET`, `POST` | `/api/sessions` | List class sessions or create a session |
+| `GET`, `POST` | `/api/attendance` | Retrieve attendance or record/update a student's status |
 
 The login API is for demonstration only; it does not issue secure sessions or tokens.
 
 ## Planned functionality
 
-- Create and manage multiple courses
 - Import student rosters
-- Create attendance sessions by course and date
 - Record present/absent attendance, including a semi-automated check-in method
 - Reduce fraudulent or duplicate check-ins
 - Store and retrieve attendance history

@@ -162,7 +162,7 @@
         <div class="attendance-header">
             <div>
                 <h2>Take Attendance</h2>
-                <p>Select a course and date, then record each student's status.</p>
+                <p>Select a course and class session, then record each student's status.</p>
             </div>
         </div>
 
@@ -173,15 +173,15 @@
                 <div>
                     <label for="courseSelect">Course</label>
                     <select id="courseSelect">
-                        <option value="CSCE 3444">CSCE 3444 - Software Engineering</option>
-                        <option value="CSCE 3110">CSCE 3110 - Data Structures</option>
-                        <option value="CSCE 3600">CSCE 3600 - Systems Programming</option>
+                        <option value="">Loading courses...</option>
                     </select>
                 </div>
 
                 <div>
-                    <label for="attendanceDate">Date</label>
-                    <input type="date" id="attendanceDate" required>
+                    <label for="sessionSelect">Class Session</label>
+                    <select id="sessionSelect" required>
+                        <option value="">Choose a course first</option>
+                    </select>
                 </div>
 
                 <div>
@@ -208,6 +208,11 @@
                 <div class="summary-card">
                     Excused
                     <p id="excusedCount">0</p>
+                </div>
+
+                <div class="summary-card">
+                    Late
+                    <p id="lateCount">0</p>
                 </div>
 
                 <div class="summary-card">
@@ -263,7 +268,7 @@
         </section>
     </main>
 
-    <script>
+    <script type="application/x-inert">
         const STORAGE_KEY = "attendanceTrackerRecords";
 
         // Sample students for demonstration.
@@ -528,5 +533,6 @@
 
         renderStudents();
     </script>
+    <script src="/js/attendance.js"></script>
 </body>
 </html>

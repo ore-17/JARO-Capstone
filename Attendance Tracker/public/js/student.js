@@ -92,5 +92,84 @@ async function loadStudentDashboard() {
     }
 }
 
+async function loadStudentAttendance() {
+    const reportMessage = document.getElementById("reportMessage");
+    const tableBody = document.getElementById("attendanceTableBody");
+
+    if (!studentUser || studentUser.role !== "student") {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `/api/attendance?studentId=${encodeURIComponent(studentUser.id)}`
+        );
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(
+                result.message || "Unable to load attendance records."
+            );
+        }
+
+        const records = result.data || [];
+        const present = records.filter(
+            (record) => record.status === "present"
+        ).length;
+        const late = records.filter(
+            (record) => record.status === "late"
+        ).length;
+        const absent = records.filter(
+            (record) => record.status === "absent"
+        ).length;
+        const counted = present + late + absent;
+        const rate = counted > 0
+            ? `${((present / counted) * 100).toFixed(1)}%`
+            : "N/A";
+
+        document.getElementById("presentCount").textContent = present;
+        document.getElementById("absentCount").textContent = absent;
+        document.getElementById("attendanceRate").textContent = rate;
+
+        tableBody.replaceChildren();
+        records
+            .slice()
+            .sort((a, b) =>
+                String(b.sessionDate).localeCompare(String(a.sessionDate))
+            )
+            .forEach((record) => {
+                const row = document.createElement("tr");
+                [record.courseName, record.sessionDate, record.status]
+                    .forEach((value) => {
+                        const cell = document.createElement("td");
+                        cell.textContent = value || "";
+                        row.appendChild(cell);
+                    });
+                tableBody.appendChild(row);
+            });
+
+        if (records.length === 0) {
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            cell.colSpan = 3;
+            cell.textContent = "No attendance records found.";
+            row.appendChild(cell);
+            tableBody.appendChild(row);
+        }
+
+        reportMessage.textContent =
+            `${records.length} attendance records. Attendance rate: ${rate}.`;
+    } catch (error) {
+        console.error("Student attendance error:", error);
+        reportMessage.textContent =
+            `Error loading attendance report: ${error.message}`;
+        tableBody.replaceChildren();
+        document.getElementById("attendanceRate").textContent = "--";
+        document.getElementById("presentCount").textContent = "--";
+        document.getElementById("absentCount").textContent = "--";
+    }
+}
+
 // Start loading the dashboard.
 loadStudentDashboard();
+loadStudentAttendance();
