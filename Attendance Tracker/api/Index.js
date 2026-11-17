@@ -15,6 +15,7 @@ const attendanceHandler = require("./attendance");
 const studentsHandler = require("./students");
 const sessionsHandler = require("./sessions");
 const loginHandler = require("./login");
+const reportsHandler = require("./reports");
 
 // Home page
 app.get("/", (req, res) => {
@@ -42,6 +43,11 @@ app.all("/api/courses", (req, res) => {
 // Attendance API
 app.all("/api/attendance", (req, res) => {
   return attendanceHandler(req, res);
+});
+
+// Instructor attendance reports API
+app.all("/api/reports", (req, res) => {
+  return reportsHandler(req, res);
 });
 
 // Students API

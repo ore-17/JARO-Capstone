@@ -40,12 +40,9 @@
             );
         });
 
-        const attendanceByCourse = await Promise.all(
-            courses.map((course) =>
-                request(`/api/attendance?courseId=${encodeURIComponent(course.id)}`)
-            )
-        );
-        records = attendanceByCourse.flat();
+        records = await request(
+            `/api/reports?instructorId=${encodeURIComponent(user.id)}`
+        ) || [];
         renderReports();
     }
 
