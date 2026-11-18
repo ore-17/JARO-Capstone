@@ -79,8 +79,8 @@ module.exports = function handler(req, res) {
         studentName: student ? student.name : "Unknown student",
         courseName: course ? course.name : "Unknown course",
         courseCode: course ? course.code : null,
-        sessionDate: session ? session.date : null,
-        sessionTopic: session ? session.topic : null
+        sessionDate: record.date || (session ? session.date : null),
+        sessionTopic: record.topic || (session ? session.topic : null)
       };
     })
     .filter((record) => (!startDate || record.sessionDate >= startDate))

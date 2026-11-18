@@ -1,7 +1,9 @@
 (function () {
     const user = JSON.parse(localStorage.getItem("user") || "null");
     const courseSelect = document.getElementById("courseSelect");
-    const sessionSelect = document.getElementById("sessionSelect");
+    const sessionDate = document.getElementById("sessionDate");
+    const sessionStartTime = document.getElementById("sessionStartTime");
+    const sessionTopic = document.getElementById("sessionTopic");
     const searchInput = document.getElementById("studentSearch");
     const tableBody = document.getElementById("attendanceTableBody");
     const message = document.getElementById("message");
@@ -14,6 +16,13 @@
         window.location.replace("/");
         return;
     }
+
+    const today = new Date();
+    sessionDate.value = [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, "0"),
+        String(today.getDate()).padStart(2, "0")
+    ].join("-");
 
     async function request(url, options) {
         const response = await fetch(url, options);
@@ -43,50 +52,27 @@
             courseSelect.replaceChildren(new Option("No courses found", ""));
             message.textContent = "No courses are assigned to your account.";
         } else {
-            message.textContent = "Choose a course to load its sessions.";
+            message.textContent = "Choose a course to load its students.";
         }
     }
 
-    async function loadSessions() {
+    async function loadRoster() {
         const courseId = courseSelect.value;
-        sessionSelect.replaceChildren(new Option("Choose a class session", ""));
         students = [];
         records = [];
         renderStudents();
 
         if (!courseId) return;
 
-        message.textContent = "Loading class sessions...";
-
-        const [sessions, roster] = await Promise.all([
-            request(`/api/sessions?courseId=${encodeURIComponent(courseId)}`),
-            request(
-                `/api/students?courseId=${encodeURIComponent(courseId)}&instructorId=${encodeURIComponent(user.id)}`
-            )
-        ]);
+        message.textContent = "Loading enrolled students...";
+        const roster = await request(
+            `/api/students?courseId=${encodeURIComponent(courseId)}&instructorId=${encodeURIComponent(user.id)}`
+        );
 
         if (courseSelect.value !== courseId) return;
 
         students = roster || [];
         students.forEach((student) => studentsById.set(student.id, student));
-
-        (sessions || [])
-            .slice()
-            .sort((a, b) => b.date.localeCompare(a.date))
-            .forEach((session) => {
-                sessionSelect.add(
-                    new Option(
-                        `${session.date} - ${session.topic} (${session.startTime})`,
-                        session.id
-                    )
-                );
-            });
-
-        if (!sessions || sessions.length === 0) {
-            message.textContent = "No class sessions exist for this course yet.";
-            renderStudents();
-            return;
-        }
 
         if (students.length === 0) {
             message.textContent = "No students are enrolled in this course.";
@@ -94,26 +80,30 @@
             return;
         }
 
-        message.textContent = "Choose a session to load attendance.";
-        renderStudents();
+        await loadAttendance();
+        message.textContent = "Students loaded. Mark attendance for the selected date.";
     }
 
     async function loadAttendance() {
-        const sessionId = sessionSelect.value;
+        const courseId = courseSelect.value;
+        const date = sessionDate.value;
         records = [];
 
-        if (!sessionId) {
+        if (!courseId || !date) {
             renderStudents();
             return;
         }
 
         message.textContent = "Loading attendance...";
         const loadedRecords = await request(
-            `/api/attendance?sessionId=${encodeURIComponent(sessionId)}`
+            `/api/attendance?courseId=${encodeURIComponent(courseId)}&date=${encodeURIComponent(date)}&instructorId=${encodeURIComponent(user.id)}`
         ) || [];
 
-        if (sessionSelect.value !== sessionId) return;
-        records = loadedRecords;
+        if (courseSelect.value !== courseId || sessionDate.value !== date) return;
+        records = window.AttendanceStore.merge(loadedRecords).filter((record) =>
+            String(record.courseId) === String(courseId) &&
+            (record.date || record.sessionDate) === date
+        );
         renderStudents();
         message.textContent = `${records.length} saved attendance records loaded.`;
     }
@@ -186,11 +176,13 @@
 
     async function saveAttendance() {
         const courseId = courseSelect.value;
-        const sessionId = sessionSelect.value;
+        const date = sessionDate.value;
+        const startTime = sessionStartTime.value;
+        const topic = sessionTopic.value.trim();
         const selects = [...tableBody.querySelectorAll(".status-select")];
 
-        if (!courseId || !sessionId) {
-            message.textContent = "Choose a course and session first.";
+        if (!courseId || !date || !startTime || !topic) {
+            message.textContent = "Choose a course and enter the attendance date, start time, and topic.";
             return;
         }
 
@@ -219,7 +211,9 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     courseId,
-                    sessionId,
+                    date,
+                    startTime,
+                    topic,
                     studentId: student.id,
                     status: select.value,
                     instructorId: user.id
@@ -231,8 +225,15 @@
             ...record,
             courseName: selectedCourse.name
         }));
+        window.AttendanceStore.save(records);
         renderStudents();
         message.textContent = "Attendance saved successfully.";
+        localStorage.setItem("lastAttendanceSaved", JSON.stringify({ courseId, date }));
+        window.parent.postMessage({
+            type: "attendance-saved",
+            courseId,
+            date
+        }, window.location.origin);
     }
 
     document.getElementById("markAllPresent").addEventListener(
@@ -247,8 +248,8 @@
         "click",
         () => saveAttendance().catch(showError)
     );
-    courseSelect.addEventListener("change", () => loadSessions().catch(showError));
-    sessionSelect.addEventListener("change", () => loadAttendance().catch(showError));
+    courseSelect.addEventListener("change", () => loadRoster().catch(showError));
+    sessionDate.addEventListener("change", () => loadAttendance().catch(showError));
     searchInput.addEventListener("input", renderStudents);
 
     function showError(error) {

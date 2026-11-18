@@ -298,6 +298,18 @@
 
         const viewButtons = document.querySelectorAll("[data-view]");
         const viewPanels = document.querySelectorAll("[data-panel]");
+        window.addEventListener("message", (event) => {
+            if (event.origin !== window.location.origin || event.data?.type !== "attendance-saved") return;
+            const attendanceFrame = document.querySelector('[data-panel="attendance"] iframe');
+            if (event.source !== attendanceFrame?.contentWindow) return;
+
+            const reportsFrame = document.querySelector('[data-panel="reports"] iframe');
+            reportsFrame?.contentWindow?.postMessage({
+                type: "attendance-saved",
+                courseId: event.data.courseId,
+                date: event.data.date
+            }, window.location.origin);
+        });
         viewButtons.forEach((button) => button.addEventListener("click", () => {
             const selectedView = button.dataset.view;
             viewButtons.forEach((item) => {
@@ -307,6 +319,15 @@
             viewPanels.forEach((panel) => {
                 panel.hidden = panel.dataset.panel !== selectedView;
             });
+            if (selectedView === "reports") {
+                const reportsFrame = document.querySelector(
+                    '[data-panel="reports"] iframe'
+                );
+                reportsFrame?.contentWindow?.postMessage(
+                    { type: "refresh-reports" },
+                    window.location.origin
+                );
+            }
         }));
     </script>
 

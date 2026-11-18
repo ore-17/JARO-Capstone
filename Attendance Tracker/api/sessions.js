@@ -1,10 +1,30 @@
 
-const { courses, sessions } = require("./data");
+const { courses, users, sessions } = require("./data");
 
 module.exports = function handler(req, res) {
   // Retrieve class sessions
   if (req.method === "GET") {
-    const { id, courseId } = req.query;
+    const { id, courseId, instructorId } = req.query;
+
+    if (instructorId) {
+      const instructor = users.find(user =>
+        String(user.id) === String(instructorId) && user.role === "instructor"
+      );
+      if (!instructor) {
+        return res.status(404).json({ success: false, message: "Instructor not found." });
+      }
+      const requestedCourse = courses.find(course =>
+        String(course.id) === String(courseId)
+      );
+      if (courseId && !requestedCourse) {
+        return res.status(404).json({ success: false, message: "Course not found." });
+      }
+      const assignedCourse = requestedCourse &&
+        String(requestedCourse.instructorId) === String(instructorId);
+      if (courseId && !assignedCourse) {
+        return res.status(403).json({ success: false, message: "You are not assigned to this course." });
+      }
+    }
 
     // Check whether the requested course exists
     if (courseId && !courses.some(course => course.id === courseId)) {
@@ -42,21 +62,47 @@ module.exports = function handler(req, res) {
 
   // Create a class session
   if (req.method === "POST") {
-    const { courseId, date, startTime, topic } = req.body || {};
+    const { courseId, date, startTime, topic, instructorId } = req.body || {};
 
-    if (!courseId || !date || !startTime || !topic) {
+    if (!courseId || !date || !startTime || !topic || !instructorId) {
       return res.status(400).json({
         success: false,
-        message: "courseId, date, startTime, and topic are required."
+        message: "courseId, date, startTime, topic, and instructorId are required."
       });
     }
 
-    const course = courses.find(course => course.id === courseId);
+    const instructor = users.find(user =>
+      String(user.id) === String(instructorId) && user.role === "instructor"
+    );
+    if (!instructor) {
+      return res.status(404).json({ success: false, message: "Instructor not found." });
+    }
+
+    const course = courses.find(course => String(course.id) === String(courseId));
 
     if (!course) {
       return res.status(404).json({
         success: false,
         message: "Course not found."
+      });
+    }
+    if (String(course.instructorId) !== String(instructorId)) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not assigned to this course."
+      });
+    }
+
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+      Number.isNaN(Date.parse(`${date}T00:00:00.000Z`)) ||
+      new Date(`${date}T00:00:00.000Z`).toISOString().slice(0, 10) !== date ||
+      !/^\d{2}:\d{2}$/.test(startTime) ||
+      typeof topic !== "string" || !topic.trim()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter a valid date, start time, and topic."
       });
     }
 

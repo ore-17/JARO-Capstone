@@ -90,16 +90,6 @@ const sessions = [
 
 const attendanceRecords = [
   {
-    id: "att-1001",
-    courseId: "CSCE-1030",
-    sessionId: "session-1030-001",
-    studentId: "student-1001",
-    status: "present",
-    notes: "",
-    recordedBy: "instructor-1001",
-    updatedAt: "2026-10-19T15:00:00.000Z"
-  },
-  {
     id: "att-1002",
     courseId: "CSCE-1030",
     sessionId: "session-1030-001",
@@ -118,16 +108,6 @@ const attendanceRecords = [
     notes: "",
     recordedBy: "instructor-1001",
     updatedAt: "2026-10-19T15:00:00.000Z"
-  },
-  {
-    id: "att-1004",
-    courseId: "CSCE-2110",
-    sessionId: "session-2110-001",
-    studentId: "student-1001",
-    status: "present",
-    notes: "",
-    recordedBy: "instructor-1002",
-    updatedAt: "2026-10-20T18:00:00.000Z"
   }
 ];
 

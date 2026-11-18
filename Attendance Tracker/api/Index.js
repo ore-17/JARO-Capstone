@@ -6,6 +6,12 @@ const app = express();
 
 app.use(express.json());
 
+// Attendance and course views should always read the latest API state.
+app.use("/api", (req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
+  next();
+});
+
 // Serve frontend files
 app.use(express.static(path.join(__dirname, "../public")));
 

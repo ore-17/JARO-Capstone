@@ -31,16 +31,37 @@ module.exports = function handler(req, res) {
 };
 
 function getAttendance(req, res) {
-  const { courseId, sessionId, studentId } = req.query;
+  const { courseId, sessionId, studentId, instructorId, date } = req.query;
+  let instructorCourseIds = null;
 
-  if (courseId && !courses.some((c) => c.id === courseId)) {
+  if (instructorId) {
+    const instructor = users.find(
+      (u) => String(u.id) === String(instructorId) && u.role === "instructor"
+    );
+    if (!instructor) {
+      return res.status(404).json({ success: false, message: "Instructor not found." });
+    }
+    instructorCourseIds = new Set(courses
+      .filter((course) => String(course.instructorId) === String(instructorId))
+      .map((course) => String(course.id)));
+    const scopedCourseId = courseId || sessions.find((s) => String(s.id) === String(sessionId))?.courseId;
+    if (scopedCourseId) {
+      const course = courses.find((c) => String(c.id) === String(scopedCourseId));
+      if (!course) return res.status(404).json({ success: false, message: "Course not found." });
+      if (String(course.instructorId) !== String(instructorId)) {
+        return res.status(403).json({ success: false, message: "You are not assigned to this course." });
+      }
+    }
+  }
+
+  if (courseId && !courses.some((c) => String(c.id) === String(courseId))) {
     return res.status(404).json({
       success: false,
       message: "Course not found."
     });
   }
 
-  if (sessionId && !sessions.some((s) => s.id === sessionId)) {
+  if (sessionId && !sessions.some((s) => String(s.id) === String(sessionId))) {
     return res.status(404).json({
       success: false,
       message: "Class session not found."
@@ -48,7 +69,7 @@ function getAttendance(req, res) {
   }
 
   if (studentId && !users.some(
-    (u) => u.id === studentId && u.role === "student"
+    (u) => String(u.id) === String(studentId) && u.role === "student"
   )) {
     return res.status(404).json({
       success: false,
@@ -58,30 +79,41 @@ function getAttendance(req, res) {
 
   let results = attendanceRecords;
 
+  if (instructorCourseIds) {
+    results = results.filter((record) => instructorCourseIds.has(String(record.courseId)));
+  }
+
   if (courseId) {
-    results = results.filter((r) => r.courseId === courseId);
+    results = results.filter((r) => String(r.courseId) === String(courseId));
   }
 
   if (sessionId) {
-    results = results.filter((r) => r.sessionId === sessionId);
+    results = results.filter((r) => String(r.sessionId) === String(sessionId));
   }
 
   if (studentId) {
-    results = results.filter((r) => r.studentId === studentId);
+    results = results.filter((r) => String(r.studentId) === String(studentId));
+  }
+
+  if (date) {
+    results = results.filter((record) => {
+      const session = sessions.find((item) => String(item.id) === String(record.sessionId));
+      return (record.date || (session && session.date)) === date;
+    });
   }
 
   // Add readable names to each record for the frontend.
   const data = results.map((record) => {
-    const student = users.find((u) => u.id === record.studentId);
-    const course = courses.find((c) => c.id === record.courseId);
-    const session = sessions.find((s) => s.id === record.sessionId);
+    const student = users.find((u) => String(u.id) === String(record.studentId));
+    const course = courses.find((c) => String(c.id) === String(record.courseId));
+    const session = sessions.find((s) => String(s.id) === String(record.sessionId));
 
     return {
       ...record,
       studentName: student ? student.name : "Unknown student",
       courseName: course ? course.name : "Unknown course",
-      sessionDate: session ? session.date : null,
-      sessionTopic: session ? session.topic : null
+      sessionDate: record.date || (session ? session.date : null),
+      sessionTopic: record.topic || (session ? session.topic : null)
     };
   });
 
@@ -96,6 +128,9 @@ function recordAttendance(req, res) {
   const {
     courseId,
     sessionId,
+    date,
+    startTime = "",
+    topic = "",
     studentId,
     status,
     instructorId,
@@ -105,7 +140,7 @@ function recordAttendance(req, res) {
   // Validate required fields.
   if (
     !courseId ||
-    !sessionId ||
+    (!sessionId && !date) ||
     !studentId ||
     !status ||
     !instructorId
@@ -113,7 +148,7 @@ function recordAttendance(req, res) {
     return res.status(400).json({
       success: false,
       message:
-        "Required fields: courseId, sessionId, studentId, status, instructorId."
+        "Required fields: courseId, date or sessionId, studentId, status, instructorId."
     });
   }
 
@@ -131,7 +166,7 @@ function recordAttendance(req, res) {
     });
   }
 
-  const course = courses.find((c) => c.id === courseId);
+  const course = courses.find((c) => String(c.id) === String(courseId));
 
   if (!course) {
     return res.status(404).json({
@@ -140,19 +175,30 @@ function recordAttendance(req, res) {
     });
   }
 
-  const session = sessions.find(
-    (s) => s.id === sessionId && s.courseId === courseId
+  const session = sessionId && sessions.find(
+    (s) => String(s.id) === String(sessionId) && String(s.courseId) === String(courseId)
   );
-
-  if (!session) {
+  if (sessionId && !session) {
     return res.status(404).json({
       success: false,
       message: "Session not found for this course."
     });
   }
 
+  const attendanceDate = date || (session && session.date);
+  const attendanceTopic = topic || (session && session.topic) || "";
+  if (
+    typeof attendanceDate !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(attendanceDate) ||
+    Number.isNaN(Date.parse(`${attendanceDate}T00:00:00.000Z`)) ||
+    new Date(`${attendanceDate}T00:00:00.000Z`).toISOString().slice(0, 10) !== attendanceDate ||
+    (startTime && !/^\d{2}:\d{2}$/.test(startTime))
+  ) {
+    return res.status(400).json({ success: false, message: "A valid attendance date and start time are required." });
+  }
+
   const student = users.find(
-    (u) => u.id === studentId && u.role === "student"
+    (u) => String(u.id) === String(studentId) && u.role === "student"
   );
 
   if (!student) {
@@ -162,7 +208,7 @@ function recordAttendance(req, res) {
     });
   }
 
-  if (!course.studentIds.includes(studentId)) {
+  if (!course.studentIds.some((id) => String(id) === String(studentId))) {
     return res.status(400).json({
       success: false,
       message: "This student is not enrolled in the course."
@@ -170,10 +216,10 @@ function recordAttendance(req, res) {
   }
 
   const instructor = users.find(
-    (u) => u.id === instructorId && u.role === "instructor"
+    (u) => String(u.id) === String(instructorId) && u.role === "instructor"
   );
 
-  if (!instructor || course.instructorId !== instructorId) {
+  if (!instructor || String(course.instructorId) !== String(instructorId)) {
     return res.status(403).json({
       success: false,
       message: "Instructor is not assigned to this course."
@@ -185,9 +231,11 @@ function recordAttendance(req, res) {
   // Update the existing record, or create a new one.
   const existingRecord = attendanceRecords.find(
     (r) =>
-      r.courseId === courseId &&
-      r.sessionId === sessionId &&
-      r.studentId === studentId
+      String(r.courseId) === String(courseId) &&
+      (sessionId
+        ? String(r.sessionId) === String(sessionId)
+        : (r.date || sessions.find((item) => String(item.id) === String(r.sessionId))?.date) === attendanceDate) &&
+      String(r.studentId) === String(studentId)
   );
 
   let record;
@@ -196,6 +244,9 @@ function recordAttendance(req, res) {
     existingRecord.status = status;
     existingRecord.notes = notes.trim();
     existingRecord.recordedBy = instructorId;
+    existingRecord.date = attendanceDate;
+    existingRecord.startTime = startTime;
+    existingRecord.topic = attendanceTopic;
     existingRecord.updatedAt = now;
     record = existingRecord;
   } else {
@@ -204,7 +255,10 @@ function recordAttendance(req, res) {
         .toString(36)
         .slice(2, 8)}`,
       courseId,
-      sessionId,
+      ...(sessionId ? { sessionId } : {}),
+      date: attendanceDate,
+      startTime,
+      topic: attendanceTopic,
       studentId,
       status,
       notes: notes.trim(),
@@ -224,8 +278,8 @@ function recordAttendance(req, res) {
       ...record,
       studentName: student.name,
       courseName: course.name,
-      sessionDate: session.date,
-      sessionTopic: session.topic
+      sessionDate: attendanceDate,
+      sessionTopic: attendanceTopic
     }
   });
 }

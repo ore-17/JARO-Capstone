@@ -162,7 +162,7 @@
         <div class="attendance-header">
             <div>
                 <h2>Take Attendance</h2>
-                <p>Select a course and class session, then record each student's status.</p>
+                <p>Select a course and attendance date, then record each student's status.</p>
             </div>
         </div>
 
@@ -178,10 +178,18 @@
                 </div>
 
                 <div>
-                    <label for="sessionSelect">Class Session</label>
-                    <select id="sessionSelect" required>
-                        <option value="">Choose a course first</option>
-                    </select>
+                    <label for="sessionDate">Attendance Date</label>
+                    <input type="date" id="sessionDate" required>
+                </div>
+
+                <div>
+                    <label for="sessionStartTime">Start Time</label>
+                    <input type="time" id="sessionStartTime" required>
+                </div>
+
+                <div>
+                    <label for="sessionTopic">Topic</label>
+                    <input type="text" id="sessionTopic" maxlength="120" required>
                 </div>
 
                 <div>
@@ -533,6 +541,7 @@
 
         renderStudents();
     </script>
+    <script src="/js/attendance-store.js"></script>
     <script src="/js/attendance.js"></script>
 </body>
 </html>

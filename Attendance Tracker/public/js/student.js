@@ -1,4 +1,18 @@
-const studentUser = JSON.parse(localStorage.getItem("user"));
+let studentUser = null;
+try {
+    studentUser = JSON.parse(localStorage.getItem("user") || "null");
+} catch (error) {
+    localStorage.removeItem("user");
+}
+
+async function requestStudentData(url) {
+    const response = await fetch(url, { cache: "no-store" });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+        throw new Error(result.message || "The request failed.");
+    }
+    return Array.isArray(result.data) ? result.data : [];
+}
 
 // Get the dashboard elements.
 const dashboardMessage = document.getElementById("dashboardMessage");
@@ -18,20 +32,9 @@ async function loadStudentDashboard() {
         courseList.textContent = "Loading courses...";
 
         // Request courses belonging to this student.
-        const response = await fetch(
+        const courses = await requestStudentData(
             `/api/courses?studentId=${encodeURIComponent(studentUser.id)}`
         );
-
-        const result = await response.json();
-
-        // Handle unsuccessful API responses.
-        if (!response.ok || !result.success) {
-            throw new Error(
-                result.message || "Unable to load your courses."
-            );
-        }
-
-        const courses = result.data || [];
 
         // Update the number of courses.
         courseCount.textContent = courses.length;
@@ -101,30 +104,25 @@ async function loadStudentAttendance() {
     }
 
     try {
-        const response = await fetch(
+        const serverRecords = await requestStudentData(
             `/api/attendance?studentId=${encodeURIComponent(studentUser.id)}`
         );
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-            throw new Error(
-                result.message || "Unable to load attendance records."
-            );
-        }
-
-        const records = result.data || [];
+        const records = window.AttendanceStore.merge(serverRecords).filter((record) =>
+            String(record.studentId) === String(studentUser.id)
+        );
+        const statusOf = (record) => String(record.status).toLowerCase();
         const present = records.filter(
-            (record) => record.status === "present"
+            (record) => statusOf(record) === "present"
         ).length;
         const late = records.filter(
-            (record) => record.status === "late"
+            (record) => statusOf(record) === "late"
         ).length;
         const absent = records.filter(
-            (record) => record.status === "absent"
+            (record) => statusOf(record) === "absent"
         ).length;
         const counted = present + late + absent;
         const rate = counted > 0
-            ? `${((present / counted) * 100).toFixed(1)}%`
+            ? `${(((present + late * 0.8) / counted) * 100).toFixed(1)}%`
             : "N/A";
 
         document.getElementById("presentCount").textContent = present;
@@ -173,3 +171,6 @@ async function loadStudentAttendance() {
 // Start loading the dashboard.
 loadStudentDashboard();
 loadStudentAttendance();
+
+// Refresh attendance when the student returns to an already-open dashboard.
+window.addEventListener("focus", loadStudentAttendance);

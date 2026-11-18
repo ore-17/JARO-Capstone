@@ -9,14 +9,32 @@
     const message = document.getElementById("message");
     let courses = [];
     let records = [];
+    let lastAttendanceSaved = null;
+
+    function getLocalDate() {
+        const today = new Date();
+        return [
+            today.getFullYear(),
+            String(today.getMonth() + 1).padStart(2, "0"),
+            String(today.getDate()).padStart(2, "0")
+        ].join("-");
+    }
 
     if (!user || user.role !== "instructor") {
         window.location.replace("/");
         return;
     }
 
+    try {
+        lastAttendanceSaved = JSON.parse(localStorage.getItem("lastAttendanceSaved") || "null");
+    } catch (error) {
+        localStorage.removeItem("lastAttendanceSaved");
+    }
+    startDate.value = lastAttendanceSaved?.date || getLocalDate();
+    endDate.value = lastAttendanceSaved?.date || getLocalDate();
+
     async function request(url) {
-        const response = await fetch(url);
+        const response = await fetch(url, { cache: "no-store" });
         const result = await response.json();
 
         if (!response.ok || !result.success) {
@@ -29,6 +47,9 @@
     async function loadReports() {
         message.textContent = "Loading attendance records...";
 
+        const selectedCourse = courseFilter.value !== "all"
+            ? courseFilter.value
+            : lastAttendanceSaved?.courseId || "all";
         courses = await request(
             `/api/courses?instructorId=${encodeURIComponent(user.id)}`
         ) || [];
@@ -39,10 +60,22 @@
                 new Option(`${course.code} - ${course.name}`, course.id)
             );
         });
+        courseFilter.value = courses.some((course) => course.id === selectedCourse)
+            ? selectedCourse
+            : "all";
 
-        records = await request(
-            `/api/reports?instructorId=${encodeURIComponent(user.id)}`
+        await refreshReportRecords();
+    }
+
+    async function refreshReportRecords() {
+        message.textContent = "Refreshing attendance records...";
+        const serverRecords = await request(
+            `/api/attendance?instructorId=${encodeURIComponent(user.id)}`
         ) || [];
+        const instructorCourseIds = new Set(courses.map((course) => String(course.id)));
+        records = window.AttendanceStore.merge(serverRecords).filter((record) =>
+            instructorCourseIds.has(String(record.courseId))
+        );
         renderReports();
     }
 
@@ -113,7 +146,7 @@
             const row = document.createElement("tr");
             const attendedSessions = student.present + student.absent + student.late;
             const percentage = attendedSessions
-                ? ((student.present + student.late) / attendedSessions) * 100
+                ? ((student.present + student.late * 0.8) / attendedSessions) * 100
                 : null;
             [
                 student.id,
@@ -189,6 +222,34 @@
         element.addEventListener("change", renderReports);
     });
     studentSearch.addEventListener("input", renderReports);
+
+    window.addEventListener("message", (event) => {
+        if (event.origin !== window.location.origin) return;
+        if (event.data?.type === "refresh-reports") {
+            refreshReportRecords().catch(showError);
+        }
+        if (event.data?.type === "attendance-saved") {
+            const { courseId, date } = event.data;
+            lastAttendanceSaved = { courseId, date };
+            localStorage.setItem("lastAttendanceSaved", JSON.stringify(lastAttendanceSaved));
+            if (date) {
+                startDate.value = date;
+                endDate.value = date;
+            }
+            const refresh = courses.some((course) => course.id === courseId)
+                ? Promise.resolve()
+                : loadReports();
+            refresh.then(() => {
+                if (courses.some((course) => course.id === courseId)) {
+                    courseFilter.value = courseId;
+                }
+                return refreshReportRecords();
+            }).catch(showError);
+        }
+    });
+    window.addEventListener("focus", () => {
+        refreshReportRecords().catch(showError);
+    });
 
     window.logout = function () {
         localStorage.removeItem("user");
